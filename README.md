@@ -17,4 +17,6 @@ Undoing, Redoing, and editing actions allows the user to explore freely: Evaluat
 
 **Here are the mechanics that make it work:**
 
+(See also the [Grammar](https://github.com/d-cook/Interact/blob/master/Grammar.txt) of the description below)
+
 I'll add more to this later.
