@@ -3,7 +3,7 @@ A tool for programming by interaction instead by coding
 
 Imagine if a drawing-program required you to type out operations as text, and then run them to see the result, rather than just "drawing" the picture directly (see [drw: a "useful tool"](https://programmingmadecomplicated.wordpress.com/2017/10/29/introducing-drw-a-useful-tool-to-solve-a-practical-problem/)). That is the backward way in which traditional computer programming works.
 
-My idea is to create a tool where programming is not done by writing instructions for the actions to perform (aka coding), but by *performing* the actions as a user, and then replaying & editing them visually. Like [Drawing Dynamic Visualizations](http://worrydream.com/DrawingDynamicVisualizationsTalk/), but for programming instead of a drawing.
+My idea is to create a tool where programming is not done by writing instructions for the actions to perform (aka coding), but by *performing* the actions as a user, and then replaying & editing them visually. Like [Drawing Dynamic Visualizations](http://worrydream.com/DrawingDynamicVisualizationsTalk/), but for a program instead of a drawing.
 
 **Here's how it works:**
 
@@ -19,4 +19,10 @@ Undoing, Redoing, and editing actions allows the user to explore freely: Evaluat
 
 (See also the [Grammar](https://github.com/d-cook/Interact/blob/master/Grammar.txt) of the description below)
 
-I'll add more to this later.
+A naive approach would be to keep a collection of the actual entities being manipulated, with a history of actions that references them directly. However, that would not work for a replayable (callable) functions, since the actual entities are different each time it is invoked. Thus, the tool keeps track of "placeholders" for entities that *might* exist at some point in time. Since all entities are created by some action, each action refers to its entities by referencing the actions from which those entities were created.
+
+The resuling model is a list of "actions", with each action consisting of a list of "entries", and each entry being either an inline value (number, string, boolean, null), a object- or array-constructor (looks like an object or an array, except that each value in it is another "entry"), or the index of some other action from which to generate the entry (think of this as a "function call"). Every time the value of an action is computed, the resulting entity will be "cached", so that it does not have to be recomputed every time that that action is referenced by another action. (For now) this presents a pure-functional model.
+
+Each "function" will contain a list of actions (as described), and when it is invoked (i.e. when another action refers to it, and that action is evaulated), a new set of entities will be created just for that invocation, each being the result of evaluating an action.
+
+Each function will contain a reference to it's parent context, and thus be able to refer to entities in its parent scope. This is the same kind of "reference" that actions use to refer to entities. The function *itself* is an entity within some evaulation context.
