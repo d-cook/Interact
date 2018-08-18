@@ -1,9 +1,7 @@
 # Interact
 A tool for programming by interaction instead by coding
 
-Imagine if a drawing-program required you to type out operations as text, and then run them to see the result, rather than just "drawing" the picture directly (see [drw: a "useful tool"](https://programmingmadecomplicated.wordpress.com/2017/10/29/introducing-drw-a-useful-tool-to-solve-a-practical-problem/)). That is the backward way in which traditional computer programming works.
-
-My idea is to create a tool where programming is not done by writing instructions for the actions to perform (aka coding), but by *performing* the actions as a user, and then replaying & editing them visually. Like [Drawing Dynamic Visualizations](http://worrydream.com/DrawingDynamicVisualizationsTalk/), but for a program instead of a drawing.
+Imagine a "drawing" program where you "draw" my typing a series of commands, which you must submit all at once before you can see the resulting image (see [drw: a "useful tool"](https://programmingmadecomplicated.wordpress.com/2017/10/29/introducing-drw-a-useful-tool-to-solve-a-practical-problem/)). As backwards as that sounds, this is how traditional computer programming ("coding") works. This tool aims to fix that by allowing one to perform and replay actions *as actions*, rather than describing the actions of a program through text. It's like "[Drawing Dynamic Visualizations](http://worrydream.com/DrawingDynamicVisualizationsTalk/)" for programming.
 
 **Here's how it works:**
 
