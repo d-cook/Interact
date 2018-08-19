@@ -5,13 +5,11 @@ Imagine a "drawing" program where you "draw" by typing a series of commands, whi
 
 **Here's how it works:**
 
-Program entities are displayed as objects in a UI, and are created, modified, composed, and executed via drag-and-drop (dnd) interactions. Drag multiple values onto a function, and the evaluated result pops out as another visual entity.
+Program entities (numbers, text, lists, operations, etc.) are displayed as visual entities that can be created & modified interactively. Some operations (e.g. creating a new value, or inserting into a list) can be done by typing or drag-and-drop; and others by dragging values onto an "operation" entity, with the result of the operation (if there be any) appearing as a new entity.
 
-All actions taken by the user are remembered, with full undo/redo support. The user can select from previous actions (or perform new actions) and box them into a repayable function. The actions can be reviewed and modified, and concrete values replaced with expressions or placeholders (see "Create by abstracting" in [Learnable Programming](http://worrydream.com/LearnableProgramming/)). The new function can then be used immediately.
+All the user's actions are recorded with full undo/redo support, and can be reviewed as a list. The user can extract previous actions from that list to create new "operation" entities. Parameters (arguments) can be added to the operation, and actions edited to use those parameters. This allows one to experiment by performing manual steps, and then "abstract" & generalize those steps into something repeatable (see "Create by abstracting" in [Learnable Programming](http://worrydream.com/LearnableProgramming/)).
 
-Functions keep track of their individual scopes and link to their parent's scopes, so nested functions can access entities in their parent (outer) contexts. Actions performed at the "top level" actually reside within a single top-level function with its own context.
-
-Undoing, Redoing, and editing actions allows the user to explore freely: Evaluate things in place and inspect the result to see what they'll do; hard-coded a value by performing actions to generate it, and then replacing those actions with the generated value. Even the act of changing history an undoable action.
+Eventually, all the "operations" that make this tool work, will be available within the tool itself. This will allow the tool itself to be modified tool from within (and on the fly) to become whatever tool (or work in whatever way) is best for any scenario.
 
 **Here are the mechanics that make it work:**
 
