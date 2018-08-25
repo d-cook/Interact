@@ -1,14 +1,3 @@
-The underlying structure for an interactive programming environment.
-
-Values ("any" below) sit visually on the screen.
-The user drags values onto a function, and the resulting value appears.
-Environment records initial state ("context" below) & actions by user ("ops" below).
-User can then "Box" everything they have done into a function.
-
-The end goal is to do this visually, but may have to start programmatically first.
-
---------------------------
-
 any   :: object | array | prim | native-function   <-- object can be a func
 prim  :: string | number | bool | null
 key   :: string
@@ -27,7 +16,7 @@ func  :: { args:[string..], values:[value..], parent:context }
 
 context :: { values:[any..], parent:context }  <-- Execution context
 
------------------------
+---------------------------------------------------------
 
 EXAMPLE: (x, y, z) --> { x: x*(d/(d+z)), y: y*(d/(d+z)) }
 
