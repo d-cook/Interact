@@ -12,7 +12,7 @@ index  :: number | string  <-- Array index or Object property
 
 func  :: { args:[string..], calcs:[value..], parent:context }
 
-context :: { values:[any..], parent:context }  <-- Execution context
+context :: { values:[any..], args:[any...], parent:context }  <-- Execution context
 
 ---------------------------------------------------------
 
