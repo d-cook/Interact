@@ -66,3 +66,8 @@ function apply(func, args) {
     return result;
 }
 
+var root = {
+    parent: null,
+    values: [root, type, get, lookupValue, lookupContext, lookup, evalObject, evalArray, evalCall, evalCalc, apply],
+    args: []
+};
