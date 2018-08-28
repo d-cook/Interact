@@ -56,7 +56,9 @@ function evalCalc(context, calc) {
 }
 
 function apply(func, args) {
-    if (type(func) === 'function') { return func.apply(null, args); }
+    var tf = type(func);
+    if (tf === 'function') { return func.apply(null, args); }
+    if (tf !== 'object') { return null; }
     var result = null;
     var context = { values:[], args:args, parent:func.parent };
     for (var i = 0; i < func.calcs.length; i++) {
