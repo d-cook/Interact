@@ -5,7 +5,7 @@ function del (o, p   ) { var v = (has(o, p) ? o[p] : null); delete o[p]; return 
 
 function type(o) {
     return (o === null || typeof o === 'undefined') ? 'null' :
-           Array.isArrray(o)                        ? 'array'
+           Array.isArray(o)                         ? 'array'
                                                     : typeof o;
 }
 
@@ -18,14 +18,14 @@ function and (L, R) {
     var args = [apply(R, [])];
     args.push.apply(args, slice(arguments, 2));
     return and.apply(null, args);
-}};
+}
 
 function or (L, R) {
     if (arguments.length < 2 || truthy(L)) { return L; }
     var args = [apply(R, [])];
     args.push.apply(args, slice(arguments, 2));
     return or.apply(null, args);
-}};
+}
 
 function newObj ( ) { return Object.create(null); }
 function keys   (o) { return Object.keys(o||{}) || []; }
@@ -67,7 +67,7 @@ function lookupContext(context, dist) {
 
 function lookup(context, path) {
     var ctx = lookupContext(context, path[0]);
-    var values = get(ctx, 'values') || [];
+    var values = get(ctx, 'values') || ctx;
     return lookupValue(values, path.slice(1));
 }
 
@@ -108,7 +108,7 @@ function apply(func, args) {
     var result = null;
     var context = { values:[], args:args, parent:func.parent };
     for (var i = 0; i < func.calcs.length; i++) {
-        result = evalCalc(func, context, func.calcs[i]);
+        result = evalCalc(context, func.calcs[i]);
         context.values.push(result);
     }
     return result;
