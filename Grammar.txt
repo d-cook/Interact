@@ -12,15 +12,15 @@ calc    :: prim               <-- Actual prim value
 args    :: [ any..          ] <-- (Actual) Arguments passed into a context
 
 context :: {                  <-- Execution context
- "name"  : string,
  "parent": context,
- "values": [ args, any.. ],
+ "values": [ args, any.. ]
 }
 
 func    :: {                  <-- User defined Function
- "parent": context
+ "name"  : string,
+ "parent": context,
  "calcs" : [ calc.. ],
- "args"  : [ string.. ],
+ "args"  : [ string.. ]
 }
 
 --------------------------------------------------------------------------------------
