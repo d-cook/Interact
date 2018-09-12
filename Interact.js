@@ -126,3 +126,23 @@ var root = {
     ]
 };
 root.values[1] = root; // Because it was undefined the first time
+
+// ---- TESTS ------
+
+function test(context, args) { console.log(apply(context, args)); }
+
+test({parent:root, calcs:[]}, [1,2,"foo",{x:5}]);
+test({parent:root, calcs:[5]}, [1,2,"foo",{x:5}]);
+test({parent:root, calcs:["test"]}, [1,2,"foo",{x:5}]);
+test({parent:root, calcs:[0,1,2,3]}, [1,2,"foo",{x:5}]);
+test({parent:root, calcs:[[0,1,2,3]]}, [1,2,"foo",{x:5}]);
+test({parent:root, calcs:[[1,[1,0]]]}, [1,2,"foo",{x:5}]);
+test({parent:root, calcs:[[1,[1,23]]]}, [1,2,"foo",{x:5}]);
+test({parent:root, calcs:[[1,[1,23],[-1,0],[-1,1]]]}, [1,2,"foo",{x:5}]);
+test({parent:root, calcs:[[1,[1,23],[0,0,0],[-1,1]]]}, [1,2,"foo",{x:5}]);
+test({parent:root, calcs:[[1,[1,23],[-1,1],[-1,2]]]}, [1,2,"foo",{x:5}]);
+test({parent:root, calcs:[[1,[1,11]]]}, [1,2,"foo",{x:5}]);
+test({parent:root, calcs:[[1,[1,11],[-1,3],[-1,2]]]}, [1,2,"foo",{foo:5}]);
+test({parent:root, calcs:[[1,[1,11],[-1,3],[-1,2]]]}, [1,2,"foo",{foo:5,x:7}]);
+test({parent:root, calcs:[[1,[1,11],[-1,3],[-1,2]]]}, [1,2,"x",{foo:5,x:7}]);
+test({parent:root, calcs:[[1,[1,11],[-1,3],[-1,2]]]}, [1,2,"xx",{foo:5,x:7}]);
