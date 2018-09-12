@@ -125,3 +125,4 @@ var root = {
         slice, push, unshift, pop, shift, charAt, substring,
     ]
 };
+root.values[1] = root; // Because it was undefined the first time
