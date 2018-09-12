@@ -114,6 +114,8 @@ function apply(func, args) {
     return result;
 }
 
+// ---- IMPLEMENTATION ----
+
 var root = {
     parent: null,
     values: [
