@@ -9,11 +9,19 @@ calc    :: prim               <-- Actual prim value
            [ 0, calc..      ] <-- Array literal of calcs
            [ 1, lookup..    ] <-- Function call (first lookup is the func, rest are the args)
 
-args    :: [ any..          ] <-- (actual) arguments passed into a context
+args    :: [ any..          ] <-- (Actual) Arguments passed into a context
 
-context :: { "name": string, "values": [args, any..], "parent": context }  <-- Execution context
+context :: {                  <-- Execution context
+ "name"  : string,
+ "parent": context,
+ "values": [ args, any.. ],
+}
 
-func    :: { "calcs": [calc..], "args": [string..], "parent": context } <-- User defined Function
+func    :: {                  <-- User defined Function
+ "parent": context
+ "calcs" : [ calc.. ],
+ "args"  : [ string.. ],
+}
 
 --------------------------------------------------------------------------------------
 
