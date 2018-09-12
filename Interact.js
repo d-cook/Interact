@@ -54,15 +54,15 @@ function shift  (a    ) { return (type(a) !== 'array') ? null : [].shift  .apply
 function charAt    (s,i  ) { return (type(s) !== 'string') ? null : s.charAt   (i   ); }
 function substring (s,b,e) { return (type(s) !== 'string') ? null : s.substring(b, e); }
 
-function lookupValue(context, path) {
-    return (path.length > 0) ? lookupValue(get(context, path[0]), path.slice(1))
-                             : context;
-}
-
 function lookupContext(context, dist) {
     return (dist < 0) ? get(get(context, 'values'), 0) || [] :
            (dist > 0) ? lookupContext(get(context, 'parent'), dist-1)
                       : context;
+}
+
+function lookupValue(context, path) {
+    return (path.length > 0) ? lookupValue(get(context, path[0]), path.slice(1))
+                             : context;
 }
 
 function lookup(context, path) {
