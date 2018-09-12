@@ -116,17 +116,27 @@ function apply(func, args) {
 
 // ---- IMPLEMENTATION ----
 
-var root = {
-    parent: null,
-    values: [
-        [/*no arguments*/],
-        root,
-        lookupValue, lookupContext, lookup, evalObject, evalArray, evalCall, evalCalc, apply,
-        has, get, set, del, type, _if, and, or, newObj, keys, length, truthy, not,
-        plus, minus, mult, div, mod, EQ, NE, LT, GT, LTE, GTE,
-        slice, push, unshift, pop, shift, charAt, substring,
-    ]
-};
+function newContext(parent, values, args) {
+    args = args || [];
+    var allValues = [].concat([args], (values || []));
+    var gap = args.length + 1;
+    return {
+        parent: parent || null,
+        values: allValues,
+        meta: {
+            args  :      args.map((v, i) => ({ x: 0, y: 20 * (i      )})),
+            values: allValues.map((v, i) => ({ x: 0, y: 20 * (i + gap)}))
+        }
+    };
+}
+
+var root = newContext(null, [
+    root,
+    lookupValue, lookupContext, lookup, evalObject, evalArray, evalCall, evalCalc, apply,
+    has, get, set, del, type, _if, and, or, newObj, keys, length, truthy, not,
+    plus, minus, mult, div, mod, EQ, NE, LT, GT, LTE, GTE,
+    slice, push, unshift, pop, shift, charAt, substring,
+]);
 root.values[1] = root; // Because it was undefined the first time
 
 // ---- TESTS ------
