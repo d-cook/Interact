@@ -60,7 +60,7 @@ function lookupValue(context, path) {
 }
 
 function lookupContext(context, dist) {
-    return (dist < 0) ? context.args || {} :
+    return (dist < 0) ? get(get(context, 'values'), 0) || [] :
            (dist > 0) ? lookupContext(get(context, 'parent'), dist-1)
                       : context;
 }
@@ -106,7 +106,7 @@ function apply(func, args) {
     if (tf === 'function') { return func.apply(null, args); }
     if (tf !== 'object') { return null; }
     var result = null;
-    var context = { values:[], args:args, parent:func.parent };
+    var context = { values:[args], parent:func.parent };
     for (var i = 0; i < func.calcs.length; i++) {
         result = evalCalc(context, func.calcs[i]);
         context.values.push(result);
@@ -116,8 +116,8 @@ function apply(func, args) {
 
 var root = {
     parent: null,
-    args: [],
     values: [
+        [/*no arguments*/],
         root,
         lookupValue, lookupContext, lookup, evalObject, evalArray, evalCall, evalCalc, apply,
         has, get, set, del, type, _if, and, or, newObj, keys, length, truthy, not,

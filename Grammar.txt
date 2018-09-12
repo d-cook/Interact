@@ -9,15 +9,23 @@ value   :: prim               <-- Actual prim value
            [ 0, value..     ] <-- Array literal of values
            [ 1, lookup..    ] <-- Calculated value
 
-context :: { "values": [any.. ], "args": [any..   ], "parent": context }  <-- Execution context
+args    :: [ any..          ] <-- (actual) arguments passed into a context
+
+context :: { "name": string, "values": [args, any..], "parent": context }  <-- Execution context
 
 func    :: { "calcs": [value..], "args": [string..], "parent": context } <-- User defined Function
 
----------------------------------------------------------
+--------------------------------------------------------------------------------------
+
+NOTE: The args array is embedded in context-values so that it is assessible (as [0,0])
+      This also means [-1,n] is a shorthand for [0,0,n] (both refering to argument n)
+
+--------------------------------------------------------------------------------------
 
 EXAMPLE: (x, y, z) --> { x: x*(d/(d+z)), y: y*(d/(d+z)) }
 
 Func: {
+  name  : "to2D"
   parent: { values: [<*>, </>, <+>] },  <-- Lookups: [ 1,..]
   args  : ["x","y","z","d"],            <-- Lookups: [-1,..]
   calcs : [                             <-- Lookups: [ 0,..]
@@ -30,13 +38,12 @@ Func: {
 }
 
 ExampleCallToFunc: {
-  parent: values: [Func],  <-- Lookups: [ 1,..] (Func is [1,0])
-  args  : [ ],             <-- Lookups: [-1,..] (But its empty)
-  calcs : [                <-- Lookups: [ 0,..]
+  parent: values: [[], Func],  <-- Lookups: [ 1,..] (Func is [1,1])
+  calcs : [                    <-- Lookups: [ 0,..]
     3,                                      <-- x = 3
     2,                                      <-- y = 2
     1,                                      <-- z = 1
     9,                                      <-- d = 9
-    [1, [1,0], [0,0], [0,1], [0,2], [0,3]]  <-- Func(3,2,1,9)
+    [1, [1,1], [0,0], [0,1], [0,2], [0,3]]  <-- Func(3,2,1,9)
   ]
 }
