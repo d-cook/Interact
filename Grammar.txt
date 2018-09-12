@@ -4,16 +4,16 @@ prim    :: string | number | bool | null
 index   :: number | string    <-- Array index or Object property
 lookup  :: [number, index..]  <-- Distance up the context-chain (-1 for args), Indexes down into a context
 
-value   :: prim               <-- Actual prim value
-           { string:value.. } <-- Object literal of values
-           [ 0, value..     ] <-- Array literal of values
-           [ 1, lookup..    ] <-- Calculated value
+calc    :: prim               <-- Actual prim value
+           { string: calc.. } <-- Object literal of calcs
+           [ 0, calc..      ] <-- Array literal of calcs
+           [ 1, lookup..    ] <-- Function call (first lookup is the func, rest are the args)
 
 args    :: [ any..          ] <-- (actual) arguments passed into a context
 
 context :: { "name": string, "values": [args, any..], "parent": context }  <-- Execution context
 
-func    :: { "calcs": [value..], "args": [string..], "parent": context } <-- User defined Function
+func    :: { "calcs": [calc..], "args": [string..], "parent": context } <-- User defined Function
 
 --------------------------------------------------------------------------------------
 
