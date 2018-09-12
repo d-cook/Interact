@@ -1,18 +1,17 @@
-any    :: object | array | prim | native-function   <-- object can be a func
-prim   :: string | number | bool | null
-key    :: string
+any     :: object | array | prim | native-function   <-- object can be a func
+prim    :: string | number | bool | null
 
-value  :: prim              <-- Actual prim value
-          { key:value.. }   <-- Object literal of values
-          [ 0, value..  ]   <-- Array literal of values
-          [ 1, lookup.. ]   <-- Calculated value
+index   :: number | string    <-- Array index or Object property
+lookup  :: [number, index..]  <-- Distance up the context-chain (-1 for args), Indexes down into a context
 
-lookup :: [number, idx..]  <-- Distance up the context-chain (-1 for args), Indexes down into a context
-index  :: number | string  <-- Array index or Object property
+value   :: prim               <-- Actual prim value
+           { string:value.. } <-- Object literal of values
+           [ 0, value..     ] <-- Array literal of values
+           [ 1, lookup..    ] <-- Calculated value
 
-func   :: { calcs:[value..], args:[string..], parent:context }
+context :: { "values": [any.. ], "args": [any..   ], "parent": context }  <-- Execution context
 
-context :: { values:[any..], args:[any..   ], parent:context }  <-- Execution context
+func    :: { "calcs": [value..], "args": [string..], "parent": context } <-- User defined Function
 
 ---------------------------------------------------------
 
