@@ -140,7 +140,7 @@ function metaWidth(value, nested) {
     var n = nested && (a||o);
     return (n) ? 16 :
            (a) ? (2 * spacing) + value.reduce((m, v) => Math.max(m, metaWidth(v, 1)), 0) :
-           (o) ? (2 * spacing) + keys(value).reduce((m, k) => Math.max(m, r.textWidth(k+' :: ') + metaWidth(value[k], 1)), 0) :
+           (o) ? (2 * spacing) + keys(value).reduce((m, k) => Math.max(m, r.textWidth(k+' : ') + metaWidth(value[k], 1)), 0) :
            (s) ? stringOf(value).split('\n').reduce((m, s) => Math.max(m, r.textWidth(s)), 0)
                : r.textWidth(stringOf(value));
 }
@@ -190,18 +190,16 @@ function getContent(value, meta, nested) {
     var t = type(value);
     var a = (t === 'array'), o = (t === 'object'), s = (t === 'string');
     var na = (nested && a), no = (nested && o);
-    return (na) ? [['filled rgba(0,0,255,0.1) rect', meta.x, meta.y, meta.w, meta.h],
-                   ['#2244AA rect', meta.x, meta.y, meta.w, meta.h],
-                   ['filled #2244AA rect', meta.x + 3, meta.y + meta.h - 5, 2, 2],
-                   ['filled #2244AA rect', meta.x + 7, meta.y + meta.h - 5, 2, 2],
-                   ['filled #2244AA rect', meta.x +11, meta.y + meta.h - 5, 2, 2]
+    return (na) ? [['filled #EEEEEE rect', meta.x, meta.y, meta.w, meta.h],
+                   ['black rect', meta.x, meta.y, meta.w, meta.h],
+                   ['filled #666666 rect', meta.x + 3, meta.y + meta.h - 6, 2, 2],
+                   ['filled #666666 rect', meta.x + 7, meta.y + meta.h - 6, 2, 2],
+                   ['filled #666666 rect', meta.x +11, meta.y + meta.h - 6, 2, 2]
                   ] :
-           (no) ? [['filled rgba(255,0,0,0.1) rect', meta.x, meta.y, meta.w, meta.h],
-                   ['#AA4422 rect', meta.x, meta.y, meta.w, meta.h],
-                   ['filled #AA4422 rect', meta.x + 3, meta.y + meta.h - 5, 2, 2],
-                   ['filled #AA4422 rect', meta.x + 3, meta.y + meta.h - 9, 2, 2],
-                   ['filled #AA4422 rect', meta.x + 7, meta.y + meta.h - 5, 2, 2],
-                   ['filled #AA4422 rect', meta.x +11, meta.y + meta.h - 5, 2, 2]
+           (no) ? [['filled #EEEEEE rect', meta.x, meta.y, meta.w, meta.h],
+                   ['black rect', meta.x, meta.y, meta.w, meta.h],
+                   ['filled #666666 rect', meta.x + 4, meta.y + meta.h - 6, 2, 2],
+                   ['filled #666666 rect', meta.x + 4, meta.y + meta.h -10, 2, 2]
                   ] :
            ( a) ? [['rect', meta.x, meta.y, meta.w, meta.h]]
                     .concat(
@@ -217,15 +215,13 @@ function getContent(value, meta, nested) {
                         )
                     ) :
            ( o) ? [['rect', meta.x, meta.y, meta.w, meta.h]]
-                    .concat(keys(value).map((k, i) => ['text', k+' :: ', meta.x-0 + spacing, meta.y-0 + spacing + i * (textSize + spacing)]))
-                    .concat(keys(value).map((k, i) => ['text', k+' :: ', meta.x-1 + spacing, meta.y-0 + spacing + i * (textSize + spacing)]))
-                    .concat(keys(value).map((k, i) => ['text', k+' :: ', meta.x-0 + spacing, meta.y-1 + spacing + i * (textSize + spacing)]))
-                    .concat(keys(value).map((k, i) => ['text', k+' :: ', meta.x-1 + spacing, meta.y-1 + spacing + i * (textSize + spacing)]))
+                    .concat(keys(value).map((k, i) => ['#888888 text', k+' : ', meta.x+0 + spacing, meta.y + spacing + i * (textSize + spacing)]))
+                    .concat(keys(value).map((k, i) => ['#888888 text', k+' : ', meta.x+1 + spacing, meta.y + spacing + i * (textSize + spacing)]))
                     .concat(
                         [].concat.apply([],
                             keys(value).map((k, i) =>
                                 getContent(value[k], {
-                                    x: meta.x + spacing + r.textWidth(k+' :: ', 1),
+                                    x: meta.x + spacing + r.textWidth(k+' : ', 1),
                                     y: meta.y + spacing + i * (textSize + spacing),
                                     w: metaWidth(value[k], 1),
                                     h: textSize
