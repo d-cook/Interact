@@ -149,23 +149,19 @@ var mouse = { x: 0, y: 0 };
 
 var r = Renderer('top left', { size: 14, baseline: 'top' });
 
-function getRenderingContent(values, meta) {
-    return values.map((v, i) => Object.assign({}, meta[i], { v: v, t: type(v) }))
-                 .map(m => (m.t === 'object') ? ['red rect',                  m.x, m.y, m.w, m.h] :
-                           (m.t === 'array' ) ? ['blue rect',                 m.x, m.y, m.w, m.h]
-                                              : ['text', JSON.stringify(m.v), m.x, m.y          ]);
+function getRenderingContent(value, meta) {
+    var t = type(value);
+    return (t === 'object') ? ['red rect',  meta.x, meta.y, meta.w, meta.h] :
+           (t === 'array' ) ? ['blue rect', meta.x, meta.y, meta.w, meta.h]
+                            : ['text', JSON.stringify(value), meta.x, meta.y];
 }
 
 function renderContent() {
-    r.render(
-        getRenderingContent(
-            view.values[0].concat(view.values),
-            view.meta.args.concat(view.meta.values)
-        ).concat([
-            ['#0044CC line', mouse.x-10, mouse.y   , mouse.x+10, mouse.y   ],
-            ['#0044CC line', mouse.x   , mouse.y-10, mouse.x   , mouse.y+10]
-        ])
-    );
+    var vals = view.values[0].concat(view.values);
+    var meta = view.meta.args.concat(view.meta.values);
+    r.render(vals.map((v, i) => getRenderingContent(v, meta[i]))
+                 .concat([['#0044CC line', mouse.x-10, mouse.y   , mouse.x+10, mouse.y   ],
+                          ['#0044CC line', mouse.x   , mouse.y-10, mouse.x   , mouse.y+10]]));
 }
 
 r.onMouseMove(function mouseMoved(x, y) {
