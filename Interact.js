@@ -131,7 +131,7 @@ function newContext(parent, values, args) {
 }
 
 var root = newContext(null, [
-    root,
+    root, // root is undefined at this point, so it must be set again below
     lookupValue, lookupContext, lookup, evalObject, evalArray, evalCall, evalCalc, apply,
     has, get, set, del, type, _if, and, or, newObj, keys, length, truthy, not,
     plus, minus, mult, div, mod, EQ, NE, LT, GT, LTE, GTE,
