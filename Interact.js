@@ -235,9 +235,7 @@ function getContent(value, meta, nested) {
 }
 
 function renderContent() {
-    r.render([].concat.apply([], view.values.map((v, i) => getContent(v, view.meta[i])))
-               .concat([['#0022CC line', mouse.x-10, mouse.y   , mouse.x+10, mouse.y   ],
-                        ['#0022CC line', mouse.x   , mouse.y-10, mouse.x   , mouse.y+10]]));
+    r.render([].concat.apply([], view.values.map((v, i) => getContent(v, view.meta[i]))));
 }
 
 r.onMouseMove(function mouseMoved(x, y) {
@@ -249,7 +247,6 @@ r.onMouseMove(function mouseMoved(x, y) {
 function fitToWindow() { r.resize(window.innerWidth-4, window.innerHeight-4); }
 
 var c = r.getCanvas();
-c.style.cursor = 'none';
 c.style.border = '2px solid red';
 window.addEventListener('resize', fitToWindow);
 document.body.style.margin = '0';
