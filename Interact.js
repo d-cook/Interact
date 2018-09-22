@@ -129,8 +129,8 @@ function newContext(parent, values, args) {
         parent: parent || null,
         values: allValues,
         meta: {
-            args  : metaFor(args  , 14, 14                , 0, 28),
-            values: metaFor(values, 14, 28*(args.length+1), 0, 28)
+            args  : metaFor(args     , 14, 14                , 0, 28),
+            values: metaFor(allValues, 14, 28*(args.length+1), 0, 28)
         }
     };
 }
@@ -146,7 +146,7 @@ root.values[1] = root; // Because it was undefined the first time
 
 var view = newContext(
     root,
-    [123, "abc", true, null, [1,2,'A','B'], {x:11, y:22}],
+    [123, "abc", true, null, [1,2,'A','B'], {x:11, y:22}, "foo"],
     ['arg1', 'arg2']
 );
 var mouse = { x: 0, y: 0 };
