@@ -14,7 +14,7 @@ args    :: [ any..          ] <-- (Actual) Arguments passed into a context
 context :: {                  <-- Execution context
  "parent": context,
  "values": [ args, any.. ],
- "meta"  : { "args": [], "values": [] }
+ "meta"  : [ {..}.. ]
 }
 
 func    :: {                  <-- User defined Function

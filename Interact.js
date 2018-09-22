@@ -149,10 +149,12 @@ function newContext(parent, values, args) {
     return {
         parent: parent || null,
         values: allValues,
-        meta: {
-            args  : args.concat(0).map(v => ({ x: spacing, y: (y = y + h + spacing), w: metaWidth(v), h: (h = metaHeight(v)) })).slice(0,-1),
-            values: allValues     .map(v => ({ x: spacing, y: (y = y + h + spacing), w: metaWidth(v), h: (h = metaHeight(v)) }))
-        }
+        meta: allValues.map(v => ({
+            x: spacing,
+            y: (y = y + h + spacing),
+            w: metaWidth(v),
+            h: (h = metaHeight(v))
+        }))
     };
 }
 
@@ -172,7 +174,7 @@ var view = newContext(
 );
 var mouse = { x: 0, y: 0 };
 
-function getRenderingContent(value, meta, nested) {
+function getContent(value, meta, nested) {
     var t = type(value);
     var a = (t === 'array'), o = (t === 'object');
     return (nested && a) ? [['filled rgba(0,0,255,0.1) rect', meta.x, meta.y, meta.w, meta.h],
@@ -192,7 +194,7 @@ function getRenderingContent(value, meta, nested) {
                             .concat(
                                 [].concat.apply([],
                                     value.map((v, i) =>
-                                        getRenderingContent(v, {
+                                        getContent(v, {
                                             x: meta.x + spacing,
                                             y: meta.y + spacing + i * (textSize + spacing),
                                             w: metaWidth(v, 1),
@@ -209,7 +211,7 @@ function getRenderingContent(value, meta, nested) {
                             .concat(
                                 [].concat.apply([],
                                     keys(value).map((k, i) =>
-                                        getRenderingContent(value[k], {
+                                        getContent(value[k], {
                                             x: meta.x + spacing + r.textWidth(k+' :: ', 1),
                                             y: meta.y + spacing + i * (textSize + spacing),
                                             w: metaWidth(value[k], 1),
@@ -222,9 +224,7 @@ function getRenderingContent(value, meta, nested) {
 }
 
 function renderContent() {
-    var vals = view.values[0].concat(view.values);
-    var meta = view.meta.args.concat(view.meta.values);
-    r.render([].concat.apply([], vals.map((v, i) => getRenderingContent(v, meta[i])))
+    r.render([].concat.apply([], view.values.map((v, i) => getContent(v, view.meta[i])))
                .concat([['#0022CC line', mouse.x-10, mouse.y   , mouse.x+10, mouse.y   ],
                         ['#0022CC line', mouse.x   , mouse.y-10, mouse.x   , mouse.y+10]]));
 }
