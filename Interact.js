@@ -116,7 +116,9 @@ function apply(func, args) {
     return result;
 }
 
-// ---- IMPLEMENTATION ----
+// -----------------------------
+// ---- TOOL IMPLEMENTATION ----
+// -----------------------------
 
 var textSize = 14; // text height
 var spacing = 12;  // spacing between components
