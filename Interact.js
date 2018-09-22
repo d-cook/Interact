@@ -127,8 +127,9 @@ function stringOf(value) {
     var t = type(value);
     return (t === 'string'  ) ? '"' + value + '"' : // TODO: Display properly formatted strings
            (t !== 'function') ? String(value)
-                              : String(value).replace(/^function\s*|\s*\{.*$/gi, '')
-                                             .replace(/^\s*\(/, '[func](');
+                              : String(value).replace(/^(function\s*(\w+)?\s*)?\(?([^\)]*)\)?\s*(\=\>|\{).*$/, "$2($3)")
+                                             .replace(/\s/g, '')
+                                             .replace(/^\(/, '[func](');
 }
 
 function metaWidth(value, nested) {
