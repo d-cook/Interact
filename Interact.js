@@ -124,8 +124,11 @@ var spacing = 12;  // spacing between components
 var r = Renderer('top left', { size: textSize, baseline: 'top' });
 
 function stringOf(value) {
-    return (type(value) === 'string'  ) ? '"' + value + '"' : // TODO: Display properly formatted strings
-                                        : String(value);
+    var t = type(value);
+    return (t === 'string'  ) ? '"' + value + '"' : // TODO: Display properly formatted strings
+           (t !== 'function') ? String(value)
+                              : String(value).replace(/^function\s*|\s*\{.*$/gi, '')
+                                             .replace(/^\s*\(/, '[func](');
 }
 
 function metaWidth(value, nested) {
@@ -173,7 +176,7 @@ root.values[1] = root; // Because it was undefined the first time
 
 var view = newContext(
     root,
-    [123, "abc", true, null, [1,2,[3,4], {},'A','B'], {x:1, y:[], z:2234}, "foo"],
+    [123, "abc", true, null, [1,2,[3,4], {},'A','B', function foo(x,y){return x+y/10;}], {x:1, y:[], z:2234}, "foo", function(){}],
     ['arg1', 'arg2']
 );
 var mouse = { x: 0, y: 0 };
