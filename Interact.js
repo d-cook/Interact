@@ -151,17 +151,17 @@ var r = Renderer('top left', { size: 14, baseline: 'top' });
 
 function getRenderingContent(value, meta) {
     var t = type(value);
-    return (t === 'object') ? ['red rect',  meta.x, meta.y, meta.w, meta.h] :
-           (t === 'array' ) ? ['blue rect', meta.x, meta.y, meta.w, meta.h]
-                            : ['text', JSON.stringify(value), meta.x, meta.y];
+    return (t === 'object') ? [['red rect',  meta.x, meta.y, meta.w, meta.h]] :
+           (t === 'array' ) ? [['blue rect', meta.x, meta.y, meta.w, meta.h]]
+                            : [['text', JSON.stringify(value), meta.x, meta.y]];
 }
 
 function renderContent() {
     var vals = view.values[0].concat(view.values);
     var meta = view.meta.args.concat(view.meta.values);
-    r.render(vals.map((v, i) => getRenderingContent(v, meta[i]))
-                 .concat([['#0044CC line', mouse.x-10, mouse.y   , mouse.x+10, mouse.y   ],
-                          ['#0044CC line', mouse.x   , mouse.y-10, mouse.x   , mouse.y+10]]));
+    r.render([].concat.apply([], vals.map((v, i) => getRenderingContent(v, meta[i])))
+               .concat([['#0044CC line', mouse.x-10, mouse.y   , mouse.x+10, mouse.y   ],
+                        ['#0044CC line', mouse.x   , mouse.y-10, mouse.x   , mouse.y+10]]));
 }
 
 r.onMouseMove(function mouseMoved(x, y) {
