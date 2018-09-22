@@ -118,18 +118,19 @@ function apply(func, args) {
 
 // ---- IMPLEMENTATION ----
 
+function metaFor(values, ix, iy, dx, dy) {
+    return values.map((v, i) => ({ x: (ix + i*dx), y: (iy + i*dy) }));
+}
+
 function newContext(parent, values, args) {
     args = args || [];
     var allValues = [].concat([args], (values || []));
-    var hPad = 8;
-    var vPad = 26;
-    var offset = vPad * (args.length + 1);
     return {
         parent: parent || null,
         values: allValues,
         meta: {
-            args  :      args.map((v, i) => ({ x: hPad, y: vPad * (i + 0.5            )})),
-            values: allValues.map((v, i) => ({ x: hPad, y: vPad * (i + args.length + 1)}))
+            args  : metaFor(args  , 14, 14                , 0, 28),
+            values: metaFor(values, 14, 28*(args.length+1), 0, 28)
         }
     };
 }
