@@ -145,8 +145,8 @@ root.values[1] = root; // Because it was undefined the first time
 
 var view = newContext(
     root,
-    [ /* initial values */ ],
-    [ /* initial arguments */ ]
+    [123, "abc", true, null, [1,2,'A','B'], {x:11, y:22}],
+    ['arg1', 'arg2']
 );
 var mouse = { x: 0, y: 0 };
 
