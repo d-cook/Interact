@@ -188,18 +188,18 @@ function getContent(value, meta, nested) {
     var t = type(value);
     var a = (t === 'array'), o = (t === 'object');
     var na = (nested && a), no = (nested && o);
-    return (na) ? [ ['filled rgba(0,0,255,0.1) rect', meta.x, meta.y, meta.w, meta.h],
-                    ['#2244AA rect', meta.x, meta.y, meta.w, meta.h],
-                    ['filled #2244AA rect', meta.x + 3, meta.y + meta.h - 5, 2, 2],
-                    ['filled #2244AA rect', meta.x + 7, meta.y + meta.h - 5, 2, 2],
-                    ['filled #2244AA rect', meta.x +11, meta.y + meta.h - 5, 2, 2]
+    return (na) ? [['filled rgba(0,0,255,0.1) rect', meta.x, meta.y, meta.w, meta.h],
+                   ['#2244AA rect', meta.x, meta.y, meta.w, meta.h],
+                   ['filled #2244AA rect', meta.x + 3, meta.y + meta.h - 5, 2, 2],
+                   ['filled #2244AA rect', meta.x + 7, meta.y + meta.h - 5, 2, 2],
+                   ['filled #2244AA rect', meta.x +11, meta.y + meta.h - 5, 2, 2]
                   ] :
-           (no) ? [ ['filled rgba(255,0,0,0.1) rect', meta.x, meta.y, meta.w, meta.h],
-                    ['#AA4422 rect', meta.x, meta.y, meta.w, meta.h],
-                    ['filled #AA4422 rect', meta.x + 3, meta.y + meta.h - 5, 2, 2],
-                    ['filled #AA4422 rect', meta.x + 3, meta.y + meta.h - 9, 2, 2],
-                    ['filled #AA4422 rect', meta.x + 7, meta.y + meta.h - 5, 2, 2],
-                    ['filled #AA4422 rect', meta.x +11, meta.y + meta.h - 5, 2, 2]
+           (no) ? [['filled rgba(255,0,0,0.1) rect', meta.x, meta.y, meta.w, meta.h],
+                   ['#AA4422 rect', meta.x, meta.y, meta.w, meta.h],
+                   ['filled #AA4422 rect', meta.x + 3, meta.y + meta.h - 5, 2, 2],
+                   ['filled #AA4422 rect', meta.x + 3, meta.y + meta.h - 9, 2, 2],
+                   ['filled #AA4422 rect', meta.x + 7, meta.y + meta.h - 5, 2, 2],
+                   ['filled #AA4422 rect', meta.x +11, meta.y + meta.h - 5, 2, 2]
                   ] :
            ( a) ? [['rect', meta.x, meta.y, meta.w, meta.h]]
                     .concat(
