@@ -143,6 +143,26 @@ var root = newContext(null, [
 ]);
 root.values[1] = root; // Because it was undefined the first time
 
+var view = newContext(
+    root,
+    [ /* initial values */ ],
+    [ /* initial arguments */ ]
+);
+
+var r = Renderer('top left', { size: 14, baseline: 'top' });
+
+function renderContent() {
+    var a = view.values[0];
+    r.render(
+        view.values
+            .map(         (v, i) => Object.assign({}, view.meta.values[i], { val: v, type: type(v) }))
+            .concat(a.map((v, i) => Object.assign({}, view.meta.args  [i], { val: v, type: type(v) })))
+            .map((m, i) => (m.type === 'object') ? ['circle',              m.x+8, m.y+7, 8    ] :
+                           (m.type === 'array' ) ? ['rect',                m.x,   m.y-1, 22, 16]
+                                                 : ['text', String(m.val), m.x,   m.y         ])
+    );
+}
+
 function fitToWindow() { r.resize(window.innerWidth-4, window.innerHeight-4); }
 
 var c = r.getCanvas();
