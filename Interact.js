@@ -127,7 +127,7 @@ var r = Renderer('top left', { size: textSize, baseline: 'top' });
 
 function stringOf(value) {
     var t = type(value);
-    return (t === 'string'  ) ? '"' + value + '"' : // TODO: Display properly formatted strings
+    return (t === 'string'  ) ? '"' + value.replace(/\t/g, '    ').replace(/\r?\n/g, '\n ') + '"' :
            (t !== 'function') ? String(value)
                               : String(value).replace(/^(function\s*(\w+)?\s*)?\(?([^\)]*)\)?\s*(\=\>|\{).*$/, "$2($3)")
                                              .replace(/\s/g, '')
@@ -136,20 +136,22 @@ function stringOf(value) {
 
 function metaWidth(value, nested) {
     var t = type(value);
-    var a = (t === 'array'), o = (t === 'object');
+    var a = (t === 'array'), o = (t === 'object'), s = (t === 'string');
     var n = nested && (a||o);
     return (n) ? 16 :
            (a) ? (2 * spacing) + value.reduce((m, v) => Math.max(m, metaWidth(v, 1)), 0) :
-           (o) ? (2 * spacing) + keys(value).reduce((m, k) => Math.max(m, r.textWidth(k+' :: ') + metaWidth(value[k], 1)), 0)
-               : r.textWidth(stringOf(value))
+           (o) ? (2 * spacing) + keys(value).reduce((m, k) => Math.max(m, r.textWidth(k+' :: ') + metaWidth(value[k], 1)), 0) :
+           (s) ? stringOf(value).split('\n').reduce((m, s) => Math.max(m, r.textWidth(s)), 0)
+               : r.textWidth(stringOf(value));
 }
 
 function metaHeight(value) {
     var t = type(value);
     var len = length(value);
-    return (t === 'array' || t === 'object')
-        ? (textSize + spacing) * Math.max(len, 1) + spacing
-        : textSize;
+    var ao = (t === 'array' || t === 'object'), s = (t === 'string');
+    return (ao) ? (textSize + spacing) * Math.max(len, 1) + spacing :
+           ( s) ? textSize * stringOf(value).split('\n').length
+                : textSize;
 }
 
 function newContext(parent, values, args) {
@@ -179,14 +181,14 @@ root.values[1] = root; // Because it was undefined the first time
 
 var view = newContext(
     root,
-    [123, "abc", true, null, [1,2,[3,4], {},'A','B', function foo(x,y){return x+y/10;}], {x:1, y:[], z:2234}, "foo", function(){}],
+    [123, "ab\tc\td\nefg\nhij\rklm\r\nnop", true, null, [1,2,[3,4], {},'A','B', function foo(x,y){return x+y/10;}], {x:1, y:[], z:2234}, "foo", function(){}],
     ['arg1', 'arg2']
 );
 var mouse = { x: 0, y: 0 };
 
 function getContent(value, meta, nested) {
     var t = type(value);
-    var a = (t === 'array'), o = (t === 'object');
+    var a = (t === 'array'), o = (t === 'object'), s = (t === 'string');
     var na = (nested && a), no = (nested && o);
     return (na) ? [['filled rgba(0,0,255,0.1) rect', meta.x, meta.y, meta.w, meta.h],
                    ['#2244AA rect', meta.x, meta.y, meta.w, meta.h],
@@ -230,8 +232,9 @@ function getContent(value, meta, nested) {
                                 }, true)
                             )
                         )
-                    )
-                : [['text', stringOf(value), meta.x, meta.y]]; // TODO: Display properly formatted strings (wrap newlines)
+                    ) :
+           ( s) ? stringOf(value).split('\n').map((s, i) => ['text', s, meta.x, meta.y + (textSize * i)])
+                : [['text', stringOf(value), meta.x, meta.y]];
 }
 
 function renderContent() {
