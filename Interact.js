@@ -148,6 +148,7 @@ var view = newContext(
     [ /* initial values */ ],
     [ /* initial arguments */ ]
 );
+var mouse = { x: 0, y: 0 };
 
 var r = Renderer('top left', { size: 14, baseline: 'top' });
 
@@ -160,12 +161,21 @@ function renderContent() {
             .map((m, i) => (m.type === 'object') ? ['circle',              m.x+8, m.y+7, 8    ] :
                            (m.type === 'array' ) ? ['rect',                m.x,   m.y-1, 22, 16]
                                                  : ['text', String(m.val), m.x,   m.y         ])
+            .concat([['#0044CC line', mouse.x-10, mouse.y   , mouse.x+10, mouse.y   ],
+                     ['#0044CC line', mouse.x   , mouse.y-10, mouse.x   , mouse.y+10]])
     );
 }
+
+r.onMouseMove(function mouseMoved(x, y) {
+    mouse.x = x;
+    mouse.y = y;
+    renderContent();
+});
 
 function fitToWindow() { r.resize(window.innerWidth-4, window.innerHeight-4); }
 
 var c = r.getCanvas();
+c.style.cursor = 'none';
 c.style.border = '2px solid red';
 window.addEventListener('resize', fitToWindow);
 document.body.style.margin = '0';
