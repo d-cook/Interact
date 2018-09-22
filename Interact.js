@@ -128,10 +128,11 @@ function widthOf(value) { return r.textWidth(JSON.stringify(value)); }
 function metaWidth(value, nested) {
     var t = type(value);
     var a = (t === 'array'), o = (t === 'object');
-    return (nested && (a||o)) ? 16 :
-           (               a) ? (2 * spacing) + value.reduce((m, v) => Math.max(m, metaWidth(v, 1)), 0) :
-           (               o) ? (2 * spacing) + keys(value).reduce((m, k) => Math.max(m, r.textWidth(k+' :: ') + metaWidth(value[k], 1)), 0)
-                              : widthOf(value);
+    var n = nested && (a||o);
+    return (n) ? 16 :
+           (a) ? (2 * spacing) +     (value).reduce((m, v) => Math.max(m, metaWidth(v, 1)), 0) :
+           (o) ? (2 * spacing) + keys(value).reduce((m, k) => Math.max(m, r.textWidth(k+' :: ') + metaWidth(value[k], 1)), 0)
+               : widthOf(value)
 }
 
 function metaHeight(value) {
@@ -177,50 +178,51 @@ var mouse = { x: 0, y: 0 };
 function getContent(value, meta, nested) {
     var t = type(value);
     var a = (t === 'array'), o = (t === 'object');
-    return (nested && a) ? [['filled rgba(0,0,255,0.1) rect', meta.x, meta.y, meta.w, meta.h],
-                            ['#2244AA rect', meta.x, meta.y, meta.w, meta.h],
-                            ['filled #2244AA rect', meta.x + 3, meta.y + meta.h - 5, 2, 2],
-                            ['filled #2244AA rect', meta.x + 7, meta.y + meta.h - 5, 2, 2],
-                            ['filled #2244AA rect', meta.x +11, meta.y + meta.h - 5, 2, 2]
-                           ] :
-           (nested && o) ? [['filled rgba(255,0,0,0.1) rect', meta.x, meta.y, meta.w, meta.h],
-                            ['#AA4422 rect', meta.x, meta.y, meta.w, meta.h],
-                            ['filled #AA4422 rect', meta.x + 3, meta.y + meta.h - 5, 2, 2],
-                            ['filled #AA4422 rect', meta.x + 3, meta.y + meta.h - 9, 2, 2],
-                            ['filled #AA4422 rect', meta.x + 7, meta.y + meta.h - 5, 2, 2],
-                            ['filled #AA4422 rect', meta.x +11, meta.y + meta.h - 5, 2, 2]
-                           ] :
-           (          a) ? [['rect', meta.x, meta.y, meta.w, meta.h]]
-                            .concat(
-                                [].concat.apply([],
-                                    value.map((v, i) =>
-                                        getContent(v, {
-                                            x: meta.x + spacing,
-                                            y: meta.y + spacing + i * (textSize + spacing),
-                                            w: metaWidth(v, 1),
-                                            h: textSize
-                                        }, true)
-                                    )
-                                )
-                            ) :
-           (          o) ? [['rect', meta.x, meta.y, meta.w, meta.h]]
-                            .concat(keys(value).map((k, i) => ['text', k+' :: ', meta.x-0 + spacing, meta.y-0 + spacing + i * (textSize + spacing)]))
-                            .concat(keys(value).map((k, i) => ['text', k+' :: ', meta.x-1 + spacing, meta.y-0 + spacing + i * (textSize + spacing)]))
-                            .concat(keys(value).map((k, i) => ['text', k+' :: ', meta.x-0 + spacing, meta.y-1 + spacing + i * (textSize + spacing)]))
-                            .concat(keys(value).map((k, i) => ['text', k+' :: ', meta.x-1 + spacing, meta.y-1 + spacing + i * (textSize + spacing)]))
-                            .concat(
-                                [].concat.apply([],
-                                    keys(value).map((k, i) =>
-                                        getContent(value[k], {
-                                            x: meta.x + spacing + r.textWidth(k+' :: ', 1),
-                                            y: meta.y + spacing + i * (textSize + spacing),
-                                            w: metaWidth(value[k], 1),
-                                            h: textSize
-                                        }, true)
-                                    )
-                                )
+    var na = (nested && a), no = (nested && o);
+    return (na) ? [ ['filled rgba(0,0,255,0.1) rect', meta.x, meta.y, meta.w, meta.h],
+                    ['#2244AA rect', meta.x, meta.y, meta.w, meta.h],
+                    ['filled #2244AA rect', meta.x + 3, meta.y + meta.h - 5, 2, 2],
+                    ['filled #2244AA rect', meta.x + 7, meta.y + meta.h - 5, 2, 2],
+                    ['filled #2244AA rect', meta.x +11, meta.y + meta.h - 5, 2, 2]
+                  ] :
+           (no) ? [ ['filled rgba(255,0,0,0.1) rect', meta.x, meta.y, meta.w, meta.h],
+                    ['#AA4422 rect', meta.x, meta.y, meta.w, meta.h],
+                    ['filled #AA4422 rect', meta.x + 3, meta.y + meta.h - 5, 2, 2],
+                    ['filled #AA4422 rect', meta.x + 3, meta.y + meta.h - 9, 2, 2],
+                    ['filled #AA4422 rect', meta.x + 7, meta.y + meta.h - 5, 2, 2],
+                    ['filled #AA4422 rect', meta.x +11, meta.y + meta.h - 5, 2, 2]
+                  ] :
+           ( a) ? [['rect', meta.x, meta.y, meta.w, meta.h]]
+                    .concat(
+                        [].concat.apply([],
+                            value.map((v, i) =>
+                                getContent(v, {
+                                    x: meta.x + spacing,
+                                    y: meta.y + spacing + i * (textSize + spacing),
+                                    w: metaWidth(v, 1),
+                                    h: textSize
+                                }, true)
                             )
-                         : [['text', JSON.stringify(value), meta.x, meta.y]];
+                        )
+                    ) :
+           ( o) ? [['rect', meta.x, meta.y, meta.w, meta.h]]
+                    .concat(keys(value).map((k, i) => ['text', k+' :: ', meta.x-0 + spacing, meta.y-0 + spacing + i * (textSize + spacing)]))
+                    .concat(keys(value).map((k, i) => ['text', k+' :: ', meta.x-1 + spacing, meta.y-0 + spacing + i * (textSize + spacing)]))
+                    .concat(keys(value).map((k, i) => ['text', k+' :: ', meta.x-0 + spacing, meta.y-1 + spacing + i * (textSize + spacing)]))
+                    .concat(keys(value).map((k, i) => ['text', k+' :: ', meta.x-1 + spacing, meta.y-1 + spacing + i * (textSize + spacing)]))
+                    .concat(
+                        [].concat.apply([],
+                            keys(value).map((k, i) =>
+                                getContent(value[k], {
+                                    x: meta.x + spacing + r.textWidth(k+' :: ', 1),
+                                    y: meta.y + spacing + i * (textSize + spacing),
+                                    w: metaWidth(value[k], 1),
+                                    h: textSize
+                                }, true)
+                            )
+                        )
+                    )
+                : [['text', JSON.stringify(value), meta.x, meta.y]]; // TODO: Display properly formatted strings (wrap newlines)
 }
 
 function renderContent() {
