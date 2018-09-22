@@ -172,11 +172,50 @@ var view = newContext(
 );
 var mouse = { x: 0, y: 0 };
 
-function getRenderingContent(value, meta) {
+function getRenderingContent(value, meta, nested) {
     var t = type(value);
-    return (t === 'object') ? [['red rect',  meta.x, meta.y, meta.w, meta.h]] :
-           (t === 'array' ) ? [['blue rect', meta.x, meta.y, meta.w, meta.h]]
-                            : [['text', JSON.stringify(value), meta.x, meta.y]];
+    var a = (t === 'array'), o = (t === 'object');
+    return (nested && a) ? [['filled rgba(0,0,255,0.2) rect', meta.x, meta.y, meta.w, meta.h],
+                            ['blue rect', meta.x, meta.y, meta.w, meta.h],
+                            ['filled #0044CC rect', meta.x + 3, meta.y + meta.h - 5, 2, 2],
+                            ['filled #0044CC rect', meta.x + 7, meta.y + meta.h - 5, 2, 2],
+                            ['filled #0044CC rect', meta.x +11, meta.y + meta.h - 5, 2, 2]
+                           ] :
+           (nested && o) ? [['filled rgba(255,0,0,0.2) rect', meta.x, meta.y, meta.w, meta.h],
+                            ['red rect', meta.x, meta.y, meta.w, meta.h],
+                            ['filled #CC4400 rect', meta.x + 3, meta.y + meta.h - 5, 2, 2],
+                            ['filled #CC4400 rect', meta.x + 3, meta.y + meta.h - 9, 2, 2],
+                            ['filled #CC4400 rect', meta.x + 7, meta.y + meta.h - 5, 2, 2],
+                            ['filled #CC4400 rect', meta.x +11, meta.y + meta.h - 5, 2, 2]
+                           ] :
+           (          a) ? [['blue rect', meta.x, meta.y, meta.w, meta.h]]
+                            .concat(
+                                [].concat.apply([],
+                                    value.map((v, i) =>
+                                        getRenderingContent(v, {
+                                            x: meta.x + spacing,
+                                            y: meta.y + spacing + i * (textSize + spacing),
+                                            w: metaWidth(v, 1),
+                                            h: textSize
+                                        }, true)
+                                    )
+                                )
+                            ) :
+           (          o) ? [['red rect', meta.x, meta.y, meta.w, meta.h]]
+                            .concat(keys(value).map((k, i) => ['text', k+' :: ', meta.x + spacing, meta.y + spacing + i * (textSize + spacing)]))
+                            .concat(
+                                [].concat.apply([],
+                                    keys(value).map((k, i) =>
+                                        getRenderingContent(value[k], {
+                                            x: meta.x + spacing + r.textWidth(k+' :: ', 1),
+                                            y: meta.y + spacing + i * (textSize + spacing),
+                                            w: metaWidth(value[k], 1),
+                                            h: textSize
+                                        }, true)
+                                    )
+                                )
+                            )
+                         : [['text', JSON.stringify(value), meta.x, meta.y]];
 }
 
 function renderContent() {
