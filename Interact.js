@@ -1,3 +1,5 @@
+// Paste "Renderer" code HERE from: https://github.com/d-cook/Render
+
 function has (o, p   ) { try { return Object.prototype.hasOwnProperty.call(o, p); } catch(e) { return false; } }
 function get (o, p   ) { return has(o, p) ? o[p] : null; }
 function set (o, p, v) { var t = type(o); if (t === 'object' || t === 'array') { o[p] = v; } return v; }
@@ -140,6 +142,17 @@ var root = newContext(null, [
     slice, push, unshift, pop, shift, charAt, substring,
 ]);
 root.values[1] = root; // Because it was undefined the first time
+
+function fitToWindow() { r.resize(window.innerWidth-4, window.innerHeight-4); }
+
+var c = r.getCanvas();
+c.style.border = '2px solid red';
+window.addEventListener('resize', fitToWindow);
+document.body.style.margin = '0';
+document.body.style.overflow = 'hidden';
+document.body.appendChild(c);
+fitToWindow();
+renderContent();
 
 // ---- TESTS ------
 
