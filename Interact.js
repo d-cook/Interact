@@ -142,7 +142,7 @@ root.values[1] = root; // Because it was undefined the first time
 
 var view = newContext(
     root,
-    [123, "abc", true, null, [1,2,'A','B'], {x:11, y:22}, "foo"],
+    [123, "abc", true, null, [1,2,[3,4], {},'A','B'], {x:1, y:[], z:2234}, "foo"],
     ['arg1', 'arg2']
 );
 var mouse = { x: 0, y: 0 };
@@ -160,8 +160,8 @@ function renderContent() {
     var vals = view.values[0].concat(view.values);
     var meta = view.meta.args.concat(view.meta.values);
     r.render([].concat.apply([], vals.map((v, i) => getRenderingContent(v, meta[i])))
-               .concat([['#0044CC line', mouse.x-10, mouse.y   , mouse.x+10, mouse.y   ],
-                        ['#0044CC line', mouse.x   , mouse.y-10, mouse.x   , mouse.y+10]]));
+               .concat([['#0022CC line', mouse.x-10, mouse.y   , mouse.x+10, mouse.y   ],
+                        ['#0022CC line', mouse.x   , mouse.y-10, mouse.x   , mouse.y+10]]));
 }
 
 r.onMouseMove(function mouseMoved(x, y) {
