@@ -118,15 +118,40 @@ function apply(func, args) {
 
 // ---- IMPLEMENTATION ----
 
+var textSize = 14; // text height
+var spacing = 12;  // spacing between components
+
+var r = Renderer('top left', { size: textSize, baseline: 'top' });
+
+function widthOf(value) { return r.textWidth(JSON.stringify(value)); }
+
+function metaWidth(value, nested) {
+    var t = type(value);
+    var a = (t === 'array'), o = (t === 'object');
+    return (nested && (a||o)) ? 16 :
+           (               a) ? (2 * spacing) + value.reduce((m, v) => Math.max(m, metaWidth(v, 1)), 0) :
+           (               o) ? (2 * spacing) + keys(value).reduce((m, k) => Math.max(m, r.textWidth(k+' :: ') + metaWidth(value[k], 1)), 0)
+                              : widthOf(value);
+}
+
+function metaHeight(value) {
+    var t = type(value);
+    var len = length(value);
+    return (t === 'array' || t === 'object')
+        ? (textSize + spacing) * Math.max(len, 1) + spacing
+        : textSize;
+}
+
 function newContext(parent, values, args) {
     args = args || [];
     var allValues = [].concat([args], (values || []));
+    var y = 0, h = 0;
     return {
         parent: parent || null,
         values: allValues,
         meta: {
-            args  : args     .map((v, i) => ({ x: 14, y: 28*(i + 0.5            ), w: 22, h: 16 })),
-            values: allValues.map((v, i) => ({ x: 14, y: 28*(i + args.length + 1), w: 22, h: 16 }))
+            args  : args.concat(0).map(v => ({ x: spacing, y: (y = y + h + spacing), w: metaWidth(v), h: (h = metaHeight(v)) })).slice(0,-1),
+            values: allValues     .map(v => ({ x: spacing, y: (y = y + h + spacing), w: metaWidth(v), h: (h = metaHeight(v)) }))
         }
     };
 }
@@ -146,8 +171,6 @@ var view = newContext(
     ['arg1', 'arg2']
 );
 var mouse = { x: 0, y: 0 };
-
-var r = Renderer('top left', { size: 14, baseline: 'top' });
 
 function getRenderingContent(value, meta) {
     var t = type(value);
