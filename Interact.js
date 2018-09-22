@@ -118,15 +118,6 @@ function apply(func, args) {
 
 // ---- IMPLEMENTATION ----
 
-function metaFor(values, ix, iy, dx, dy) {
-    return values.map((v, i) => ({
-        x: (ix + i*dx),
-        y: (iy + i*dy),
-        w: 22,
-        h: 16
-    }));
-}
-
 function newContext(parent, values, args) {
     args = args || [];
     var allValues = [].concat([args], (values || []));
@@ -134,8 +125,8 @@ function newContext(parent, values, args) {
         parent: parent || null,
         values: allValues,
         meta: {
-            args  : metaFor(args     , 14, 14                , 0, 28),
-            values: metaFor(allValues, 14, 28*(args.length+1), 0, 28)
+            args  : args     .map((v, i) => ({ x: 14, y: 28*(i + 0.5            ), w: 22, h: 16 })),
+            values: allValues.map((v, i) => ({ x: 14, y: 28*(i + args.length + 1), w: 22, h: 16 }))
         }
     };
 }
@@ -158,8 +149,7 @@ var mouse = { x: 0, y: 0 };
 
 var r = Renderer('top left', { size: 14, baseline: 'top' });
 
-function getRenderingContent(values, meta, vert) {
-    meta = meta || metaFor(values, 5, 5, (vert ? 0 : 24), (vert ? 24 : 0));
+function getRenderingContent(values, meta) {
     return values.map((v, i) => Object.assign({}, meta[i], { v: v, t: type(v) }))
                  .map(m => (m.t === 'object') ? ['red rect',                  m.x, m.y, m.w, m.h] :
                            (m.t === 'array' ) ? ['blue rect',                 m.x, m.y, m.w, m.h]
