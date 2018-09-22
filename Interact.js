@@ -123,16 +123,19 @@ var spacing = 12;  // spacing between components
 
 var r = Renderer('top left', { size: textSize, baseline: 'top' });
 
-function widthOf(value) { return r.textWidth(JSON.stringify(value)); }
+function stringOf(value) {
+    return (type(value) === 'string'  ) ? '"' + value + '"' : // TODO: Display properly formatted strings
+                                        : String(value);
+}
 
 function metaWidth(value, nested) {
     var t = type(value);
     var a = (t === 'array'), o = (t === 'object');
     var n = nested && (a||o);
     return (n) ? 16 :
-           (a) ? (2 * spacing) +     (value).reduce((m, v) => Math.max(m, metaWidth(v, 1)), 0) :
+           (a) ? (2 * spacing) + value.reduce((m, v) => Math.max(m, metaWidth(v, 1)), 0) :
            (o) ? (2 * spacing) + keys(value).reduce((m, k) => Math.max(m, r.textWidth(k+' :: ') + metaWidth(value[k], 1)), 0)
-               : widthOf(value)
+               : r.textWidth(stringOf(value))
 }
 
 function metaHeight(value) {
@@ -222,7 +225,7 @@ function getContent(value, meta, nested) {
                             )
                         )
                     )
-                : [['text', JSON.stringify(value), meta.x, meta.y]]; // TODO: Display properly formatted strings (wrap newlines)
+                : [['text', stringOf(value), meta.x, meta.y]]; // TODO: Display properly formatted strings (wrap newlines)
 }
 
 function renderContent() {
