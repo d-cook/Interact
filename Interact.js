@@ -119,13 +119,15 @@ function apply(func, args) {
 function newContext(parent, values, args) {
     args = args || [];
     var allValues = [].concat([args], (values || []));
-    var gap = args.length + 1;
+    var hPad = 8;
+    var vPad = 26;
+    var offset = vPad * (args.length + 1);
     return {
         parent: parent || null,
         values: allValues,
         meta: {
-            args  :      args.map((v, i) => ({ x: 0, y: 20 * (i      )})),
-            values: allValues.map((v, i) => ({ x: 0, y: 20 * (i + gap)}))
+            args  :      args.map((v, i) => ({ x: hPad, y: vPad * (i + 0.5            )})),
+            values: allValues.map((v, i) => ({ x: hPad, y: vPad * (i + args.length + 1)}))
         }
     };
 }
