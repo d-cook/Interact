@@ -153,17 +153,23 @@ var mouse = { x: 0, y: 0 };
 
 var r = Renderer('top left', { size: 14, baseline: 'top' });
 
+function getRenderingContent(values, meta, vert) {
+    meta = meta || metaFor(values, 5, 5, (vert ? 0 : 24), (vert ? 24 : 0));
+    return values.map((v, i) => Object.assign({}, meta[i], { v: v, t: type(v) }))
+                 .map(m => (m.t === 'object') ? ['circle',            m.x+8, m.y+7, 8     ] :
+                           (m.t === 'array' ) ? ['rect',              m.x,   m.y-1, 22, 16]
+                                              : ['text', String(m.v), m.x,   m.y          ]);
+}
+
 function renderContent() {
-    var a = view.values[0];
     r.render(
-        view.values
-            .map(         (v, i) => Object.assign({}, view.meta.values[i], { val: v, type: type(v) }))
-            .concat(a.map((v, i) => Object.assign({}, view.meta.args  [i], { val: v, type: type(v) })))
-            .map((m, i) => (m.type === 'object') ? ['circle',              m.x+8, m.y+7, 8    ] :
-                           (m.type === 'array' ) ? ['rect',                m.x,   m.y-1, 22, 16]
-                                                 : ['text', String(m.val), m.x,   m.y         ])
-            .concat([['#0044CC line', mouse.x-10, mouse.y   , mouse.x+10, mouse.y   ],
-                     ['#0044CC line', mouse.x   , mouse.y-10, mouse.x   , mouse.y+10]])
+        getRenderingContent(
+            view.values[0].concat(view.values),
+            view.meta.args.concat(view.meta.values)
+        ).concat([
+            ['#0044CC line', mouse.x-10, mouse.y   , mouse.x+10, mouse.y   ],
+            ['#0044CC line', mouse.x   , mouse.y-10, mouse.x   , mouse.y+10]
+        ])
     );
 }
 
