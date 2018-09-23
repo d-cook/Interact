@@ -185,7 +185,7 @@ var view = newContext(
     ['arg1', 'arg2']
 );
 
-var mouse = { x: 0, y: 0 };
+var mouse = { x: 0, y: 0, pressed: false, pressedX: 0, pressedY: 0 };
 var hoveredItem = -1;
 var selectedItem = -1;
 
@@ -261,7 +261,15 @@ r.onMouseMove(function mouseMoved(x, y) {
 });
 
 r.onMouseDown(function mouseDown(x, y) {
+    mouse.pressed = true;
+    mouse.pressedX = x;
+    mouse.pressedY = y;
     selectedItem = hoveredItem;
+    renderContent();
+});
+
+r.onMouseUp(function mouseUp(x, y) {
+    mouse.pressed = false;
     renderContent();
 });
 
