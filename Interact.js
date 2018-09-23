@@ -197,11 +197,11 @@ function getContent(value, meta, idx) {
     var selected = (selectedItem === idx);
     return (
         (selected || hoveredItem === idx)
-            ? [[(selected ? 'cyan' : 'yellow') +
-                     ' filled rect', meta.x - 2, meta.y - 2, meta.w + 4, meta.h + 4],
-               ['white filled rect', meta.x + 3, meta.y + 3, meta.w - 6, meta.h - 6]]
+            ? [[(selected ? 'cyan' : '#FFEE44')+' filled rect', meta.x - 2, meta.y - 2, meta.w + 4, meta.h + 4]]
             : []
-    ).concat(
+    )
+    .concat([['white filled rect', meta.x, meta.y, meta.w, meta.h]])
+    .concat(
        (na) ? [['filled #EEEEEE rect', meta.x, meta.y, meta.w, meta.h],
                ['black rect', meta.x, meta.y, meta.w, meta.h],
                ['filled #666666 rect', meta.x + 3, meta.y + meta.h - 6, 2, 2],
