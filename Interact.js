@@ -184,7 +184,9 @@ var view = newContext(
     [123, "ab\tc\td\nefg\nhij\rklm\r\nnop", true, null, [1,2,[3,4], {},'A','B', function foo(x,y){return x+y/10;}], {x:1, y:[], z:2234}, "foo", function(){}],
     ['arg1', 'arg2']
 );
+
 var mouse = { x: 0, y: 0 };
+var hoveredItem = -1;
 
 function getContent(value, meta, idx) {
     var nested = !(idx >= 0); // because (undefined < 0) is false
@@ -192,12 +194,10 @@ function getContent(value, meta, idx) {
     var a = (t === 'array'), o = (t === 'object'), s = (t === 'string');
     var na = (nested && a), no = (nested && o);
     return (
-        (!nested && mouse.x >= meta.x && mouse.x <= meta.x + meta.w
-                 && mouse.y >= meta.y && mouse.y <= meta.y + meta.h
-        ) ? [['yellow filled rect', meta.x - 2, meta.y - 2, meta.w + 4, meta.h + 4],
-             [ 'white filled rect', meta.x + 3, meta.y + 3, meta.w - 6, meta.h - 6]
-            ]
-          : []
+        (hoveredItem === idx)
+            ? [['yellow filled rect', meta.x - 2, meta.y - 2, meta.w + 4, meta.h + 4],
+               [ 'white filled rect', meta.x + 3, meta.y + 3, meta.w - 6, meta.h - 6]]
+            : []
     ).concat(
            (na) ? [['filled #EEEEEE rect', meta.x, meta.y, meta.w, meta.h],
                    ['black rect', meta.x, meta.y, meta.w, meta.h],
@@ -250,6 +250,10 @@ function renderContent() {
 r.onMouseMove(function mouseMoved(x, y) {
     mouse.x = x;
     mouse.y = y;
+    hoveredItem = view.values.reduce((h, v, i) => {
+        var m = view.meta[i];
+        return (h < 0 && x >= m.x && x <= m.x + m.w && y >= m.y && y <= m.y + m.h) ? i : h;
+    }, -1);
     renderContent();
 });
 
