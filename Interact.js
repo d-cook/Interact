@@ -251,6 +251,11 @@ function renderContent() {
 }
 
 r.onMouseMove(function mouseMoved(x, y) {
+    if (mouse.pressed && selectedItem >= 0) {
+        var meta = view.meta[selectedItem];
+        meta.x += x - mouse.x;
+        meta.y += y - mouse.y;
+    }
     mouse.x = x;
     mouse.y = y;
     hoveredItem = view.values.reduce((h, v, i) => {
