@@ -186,7 +186,8 @@ var view = newContext(
 );
 var mouse = { x: 0, y: 0 };
 
-function getContent(value, meta, nested) {
+function getContent(value, meta, idx) {
+    var nested = !(idx >= 0); // because (undefined < 0) is false
     var t = type(value);
     var a = (t === 'array'), o = (t === 'object'), s = (t === 'string');
     var na = (nested && a), no = (nested && o);
@@ -218,7 +219,7 @@ function getContent(value, meta, nested) {
                                     y: meta.y + spacing + i * (textSize + spacing),
                                     w: metaWidth(v, 1),
                                     h: textSize
-                                }, true)
+                                })
                             )
                         )
                     ) :
@@ -233,7 +234,7 @@ function getContent(value, meta, nested) {
                                     y: meta.y + spacing + i * (textSize + spacing),
                                     w: metaWidth(value[k], 1),
                                     h: textSize
-                                }, true)
+                                })
                             )
                         )
                     ) :
@@ -243,7 +244,7 @@ function getContent(value, meta, nested) {
 }
 
 function renderContent() {
-    r.render([].concat.apply([], view.values.map((v, i) => getContent(v, view.meta[i]))));
+    r.render([].concat.apply([], view.values.map((v, i) => getContent(v, view.meta[i], i))));
 }
 
 r.onMouseMove(function mouseMoved(x, y) {
