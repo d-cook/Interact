@@ -202,47 +202,47 @@ function getContent(value, meta, idx) {
                ['white filled rect', meta.x + 3, meta.y + 3, meta.w - 6, meta.h - 6]]
             : []
     ).concat(
-           (na) ? [['filled #EEEEEE rect', meta.x, meta.y, meta.w, meta.h],
-                   ['black rect', meta.x, meta.y, meta.w, meta.h],
-                   ['filled #666666 rect', meta.x + 3, meta.y + meta.h - 6, 2, 2],
-                   ['filled #666666 rect', meta.x + 7, meta.y + meta.h - 6, 2, 2],
-                   ['filled #666666 rect', meta.x +11, meta.y + meta.h - 6, 2, 2]
-                  ] :
-           (no) ? [['filled #EEEEEE rect', meta.x, meta.y, meta.w, meta.h],
-                   ['black rect', meta.x, meta.y, meta.w, meta.h],
-                   ['filled #666666 rect', meta.x + 4, meta.y + meta.h - 6, 2, 2],
-                   ['filled #666666 rect', meta.x + 4, meta.y + meta.h -10, 2, 2]
-                  ] :
-           ( a) ? [['rect', meta.x, meta.y, meta.w, meta.h]]
-                    .concat(
-                        [].concat.apply([],
-                            value.map((v, i) =>
-                                getContent(v, {
-                                    x: meta.x + spacing,
-                                    y: meta.y + spacing + i * (textSize + spacing),
-                                    w: metaWidth(v, 1),
-                                    h: textSize
-                                })
-                            )
+       (na) ? [['filled #EEEEEE rect', meta.x, meta.y, meta.w, meta.h],
+               ['black rect', meta.x, meta.y, meta.w, meta.h],
+               ['filled #666666 rect', meta.x + 3, meta.y + meta.h - 6, 2, 2],
+               ['filled #666666 rect', meta.x + 7, meta.y + meta.h - 6, 2, 2],
+               ['filled #666666 rect', meta.x +11, meta.y + meta.h - 6, 2, 2]
+              ] :
+       (no) ? [['filled #EEEEEE rect', meta.x, meta.y, meta.w, meta.h],
+               ['black rect', meta.x, meta.y, meta.w, meta.h],
+               ['filled #666666 rect', meta.x + 4, meta.y + meta.h - 6, 2, 2],
+               ['filled #666666 rect', meta.x + 4, meta.y + meta.h -10, 2, 2]
+              ] :
+        (a) ? [['rect', meta.x, meta.y, meta.w, meta.h]]
+                .concat(
+                    [].concat.apply([],
+                        value.map((v, i) =>
+                            getContent(v, {
+                                x: meta.x + spacing,
+                                y: meta.y + spacing + i * (textSize + spacing),
+                                w: metaWidth(v, 1),
+                                h: textSize
+                            })
                         )
-                    ) :
-           ( o) ? [['rect', meta.x, meta.y, meta.w, meta.h]]
-                    .concat(keys(value).map((k, i) => ['#888888 text', k+' : ', meta.x+0 + spacing, meta.y + spacing + i * (textSize + spacing)]))
-                    .concat(keys(value).map((k, i) => ['#888888 text', k+' : ', meta.x+1 + spacing, meta.y + spacing + i * (textSize + spacing)]))
-                    .concat(
-                        [].concat.apply([],
-                            keys(value).map((k, i) =>
-                                getContent(value[k], {
-                                    x: meta.x + spacing + r.textWidth(k+' : ', 1),
-                                    y: meta.y + spacing + i * (textSize + spacing),
-                                    w: metaWidth(value[k], 1),
-                                    h: textSize
-                                })
-                            )
+                    )
+                ) :
+        (o) ? [['rect', meta.x, meta.y, meta.w, meta.h]]
+                .concat(keys(value).map((k, i) => ['#888888 text', k+' : ', meta.x+0 + spacing, meta.y + spacing + i * (textSize + spacing)]))
+                .concat(keys(value).map((k, i) => ['#888888 text', k+' : ', meta.x+1 + spacing, meta.y + spacing + i * (textSize + spacing)]))
+                .concat(
+                    [].concat.apply([],
+                        keys(value).map((k, i) =>
+                            getContent(value[k], {
+                                x: meta.x + spacing + r.textWidth(k+' : ', 1),
+                                y: meta.y + spacing + i * (textSize + spacing),
+                                w: metaWidth(value[k], 1),
+                                h: textSize
+                            })
                         )
-                    ) :
-           ( s) ? stringOf(value).split('\n').map((s, i) => ['text', s, meta.x, meta.y + (textSize * i)])
-                : [['text', stringOf(value), meta.x, meta.y]]
+                    )
+                ) :
+        (s) ? stringOf(value).split('\n').map((s, i) => ['text', s, meta.x, meta.y + (textSize * i)])
+            : [['text', stringOf(value), meta.x, meta.y]]
     );
 }
 
