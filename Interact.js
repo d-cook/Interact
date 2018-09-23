@@ -276,6 +276,10 @@ r.onMouseDown(function mouseDown(x, y) {
     mouse.pressedX = x;
     mouse.pressedY = y;
     selectedItem = hoveredItem;
+    if (selectedItem >= 0) {
+        view.meta[selectedItem].z = -1;
+        valuesByZ().map((vmi, i) => vmi.m.z = i);
+    }
     renderContent();
 });
 
