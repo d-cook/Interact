@@ -190,7 +190,15 @@ function getContent(value, meta, nested) {
     var t = type(value);
     var a = (t === 'array'), o = (t === 'object'), s = (t === 'string');
     var na = (nested && a), no = (nested && o);
-    return (na) ? [['filled #EEEEEE rect', meta.x, meta.y, meta.w, meta.h],
+    return (
+        (!nested && mouse.x >= meta.x && mouse.x <= meta.x + meta.w
+                 && mouse.y >= meta.y && mouse.y <= meta.y + meta.h
+        ) ? [['yellow filled rect', meta.x - 2, meta.y - 2, meta.w + 4, meta.h + 4],
+             [ 'white filled rect', meta.x + 3, meta.y + 3, meta.w - 6, meta.h - 6]
+            ]
+          : []
+    ).concat(
+           (na) ? [['filled #EEEEEE rect', meta.x, meta.y, meta.w, meta.h],
                    ['black rect', meta.x, meta.y, meta.w, meta.h],
                    ['filled #666666 rect', meta.x + 3, meta.y + meta.h - 6, 2, 2],
                    ['filled #666666 rect', meta.x + 7, meta.y + meta.h - 6, 2, 2],
@@ -230,7 +238,8 @@ function getContent(value, meta, nested) {
                         )
                     ) :
            ( s) ? stringOf(value).split('\n').map((s, i) => ['text', s, meta.x, meta.y + (textSize * i)])
-                : [['text', stringOf(value), meta.x, meta.y]];
+                : [['text', stringOf(value), meta.x, meta.y]]
+    );
 }
 
 function renderContent() {
