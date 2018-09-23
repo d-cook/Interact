@@ -161,11 +161,12 @@ function newContext(parent, values, args) {
     return {
         parent: parent || null,
         values: allValues,
-        meta: allValues.map(v => ({
+        meta: allValues.map((v, i) => ({
             x: spacing,
             y: (y = y + h + spacing),
             w: metaWidth(v),
-            h: (h = metaHeight(v))
+            h: (h = metaHeight(v)),
+            z: i // z-index
         }))
     };
 }
@@ -246,8 +247,13 @@ function getContent(value, meta, idx) {
     );
 }
 
+function valuesByZ() {
+    return view.values.map ((v, i) => ({ v: v, m: view.meta[i], i: i }))
+                      .sort((a, b) => (a.m.z || 0) - (b.m.z || 0));
+}
+
 function renderContent() {
-    r.render([].concat.apply([], view.values.map((v, i) => getContent(v, view.meta[i], i))));
+    r.render([].concat.apply([], valuesByZ().reverse().map(vmi => getContent(vmi.v, vmi.m, vmi.i))));
 }
 
 r.onMouseMove(function mouseMoved(x, y) {
@@ -258,9 +264,9 @@ r.onMouseMove(function mouseMoved(x, y) {
     }
     mouse.x = x;
     mouse.y = y;
-    hoveredItem = view.values.reduce((h, v, i) => {
-        var m = view.meta[i];
-        return (h < 0 && x >= m.x && x <= m.x + m.w && y >= m.y && y <= m.y + m.h) ? i : h;
+    hoveredItem = valuesByZ().reduce((h, vmi) => {
+        var m = vmi.m;
+        return (h < 0 && x >= m.x && x <= m.x + m.w && y >= m.y && y <= m.y + m.h) ? vmi.i : h;
     }, -1);
     renderContent();
 });
