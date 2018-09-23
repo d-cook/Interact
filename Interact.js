@@ -187,16 +187,19 @@ var view = newContext(
 
 var mouse = { x: 0, y: 0 };
 var hoveredItem = -1;
+var selectedItem = -1;
 
 function getContent(value, meta, idx) {
     var nested = !(idx >= 0); // because (undefined < 0) is false
     var t = type(value);
     var a = (t === 'array'), o = (t === 'object'), s = (t === 'string');
     var na = (nested && a), no = (nested && o);
+    var selected = (selectedItem === idx);
     return (
-        (hoveredItem === idx)
-            ? [['yellow filled rect', meta.x - 2, meta.y - 2, meta.w + 4, meta.h + 4],
-               [ 'white filled rect', meta.x + 3, meta.y + 3, meta.w - 6, meta.h - 6]]
+        (selected || hoveredItem === idx)
+            ? [[(selected ? 'cyan' : 'yellow') +
+                     ' filled rect', meta.x - 2, meta.y - 2, meta.w + 4, meta.h + 4],
+               ['white filled rect', meta.x + 3, meta.y + 3, meta.w - 6, meta.h - 6]]
             : []
     ).concat(
            (na) ? [['filled #EEEEEE rect', meta.x, meta.y, meta.w, meta.h],
@@ -254,6 +257,11 @@ r.onMouseMove(function mouseMoved(x, y) {
         var m = view.meta[i];
         return (h < 0 && x >= m.x && x <= m.x + m.w && y >= m.y && y <= m.y + m.h) ? i : h;
     }, -1);
+    renderContent();
+});
+
+r.onMouseDown(function mouseDown(x, y) {
+    selectedItem = hoveredItem;
     renderContent();
 });
 
