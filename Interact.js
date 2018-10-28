@@ -104,16 +104,18 @@ function evalAction(context, action) {
 }
 
 function apply(func, args) {
-    var tf = type(func);
-    if (tf === 'function') { return func.apply(null, args); }
-    if (tf !== 'object') { return null; }
-    var result = null;
+    var vals = applyContext(func, args).values;
+    return (vals.length > 0) ? vals[vals.length - 1] : null;
+}
+
+function applyContext(func, args) {
     var context = { values:[args], parent:func.parent };
-    for (var i = 0; i < func.actions.length; i++) {
-        result = evalAction(context, func.actions[i]);
-        context.values.push(result);
-    }
-    return result;
+    var vals = context.values;
+    var tf = type(func);
+    if (tf === 'function') { vals.push(func.apply(null, args)); }
+    else if (tf !== 'object') { vals.push(null); }
+    else { func.actions.map(a => vals.push(evalAction(context, a))); }
+    return context;
 }
 
 // -----------------------------
