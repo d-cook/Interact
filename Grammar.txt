@@ -1,5 +1,5 @@
-any     :: object | array | prim | native-function   <-- object can be a func
-prim    :: string | number | bool | null
+any      :: object | array | prim
+prim     :: string | number | bool | null | native-function
 
 index   :: number | string      <-- Array index or Object property
 lookup  :: [ number, index.. ]  <-- Distance up the context-chain (-1 for args), Indexes down into a context
