@@ -1,27 +1,34 @@
 any      :: object | array | prim
 prim     :: string | number | bool | null | native-function
 
-index   :: number | string      <-- Array index or Object property
-lookup  :: [ number, index.. ]  <-- Distance up the context-chain (-1 for args), Indexes down into a context
+index    :: number | string      <-- Array index or Object property
+lookup   :: [ number, index.. ]  <-- Distance up the context-chain (-1 for args), Indexes down into a context
 
-action  :: prim                 <-- Actual prim value
-           { string: action.. } <-- Object literal of actions
-           [ 0, action..      ] <-- Array literal of actions
-           [ 1, lookup..      ] <-- Function call (first lookup is the func, rest are the args)
+action   :: prim                 <-- Actual prim value
+            { string: action.. } <-- Object literal of actions
+            [ 0, action..      ] <-- Array literal of actions
+            [ 1, lookup..      ] <-- Function call (first lookup is the func, rest are the args)
 
-args    :: [ any..            ] <-- (Actual) Arguments passed into a context
+args     :: [ any..            ] <-- (Actual) Arguments passed into a context
 
-context :: {                    <-- Execution context
- "parent": context,
- "values": [ args, any.. ],
- "meta"  : [ {..}.. ]
+context  :: {                    <-- Execution context
+   "parent" : context,
+   "values" : [ args, any.. ]
 }
 
-func     :: {                   <-- User defined Function
- "name"   : string,
- "parent" : context,
- "actions": [ action.. ],
- "args"   : [ string.. ]
+func     :: {                    <-- User defined Function
+   "name"   : string,
+   "parent" : context,
+   "actions": [ action.. ],
+   "args"   : [ string.. ],
+   "meta"   : [ { .. }.. ]
+}
+
+view     :: {                    <-- Editor view
+   "func"   : func
+   "context": context
+   "parent" : view
+   "args"   : [ any.. ]
 }
 
 --------------------------------------------------------------------------------------

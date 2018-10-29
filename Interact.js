@@ -156,37 +156,57 @@ function metaHeight(value) {
                 : textSize;
 }
 
-function newContext(parent, values, args) {
-    args = args || [];
-    var allValues = [].concat([args], (values || []));
+function createMeta(values) {
     var y = 0, h = 0;
+    return values.map((v, i) => ({
+        x: spacing,
+        y: (y = y + h + spacing),
+        w: metaWidth(v),
+        h: (h = metaHeight(v)),
+        z: i // z-index
+    }));
+}
+
+function createView(func, args, parent) {
+    var context = applyContext(func, args);
+    if (!func.meta) { func.meta = createMeta(context.values); }
     return {
-        parent: parent || null,
-        values: allValues,
-        meta: allValues.map((v, i) => ({
-            x: spacing,
-            y: (y = y + h + spacing),
-            w: metaWidth(v),
-            h: (h = metaHeight(v)),
-            z: i // z-index
-        }))
+        func   : func,
+        context: context,
+        parent : parent,
+        args   : args
     };
 }
 
-var root = newContext(null, [
-    root, // root is undefined at this point, so it must be set again below
-    lookupValue, lookupContext, lookup, evalObject, evalArray, evalCall, evalAction, apply,
-    has, get, set, del, type, _if, and, or, newObj, keys, length, truthy, not,
-    plus, minus, mult, div, mod, EQ, NE, LT, GT, LTE, GTE,
-    slice, push, unshift, pop, shift, charAt, substring,
-]);
-root.values[1] = root; // Because it was undefined the first time
+var rootFunc = {
+    parent : null,
+    args   : [],
+    actions: [
+        null, // Reassigned to the root context below
+        lookupValue, lookupContext, lookup, evalObject, evalArray, evalCall, evalAction, apply,
+        has, get, set, del, type, _if, and, or, newObj, keys, length, truthy, not,
+        plus, minus, mult, div, mod, EQ, NE, LT, GT, LTE, GTE,
+        slice, push, unshift, pop, shift, charAt, substring
+    ]
+};
+var root = createView(rootFunc, []);
+root.context.values[1] = root.context; // Because it was undefined the first time
 
-var view = newContext(
-    root,
-    [123, "ab\tc\td\nefg\nhij\rklm\r\nnop", true, null, [1,2,[3,4], {},'A','B', function foo(x,y){return x+y/10;}], {x:1, y:[], z:2234}, "foo", function(){}],
-    ['arg1', 'arg2']
-);
+var viewFunc = {
+    parent : root.context,
+    args   : ['param1', 'param2'],
+    actions: [
+        123,
+        "ab\tc\td\nefg\nhij\rklm\r\nnop",
+        true,
+        null,
+        [0, 1, 2, [0, 3, 4], {}, 'A', 'B', function foo(x,y){return x+y/10;}],
+        {x:1, y:[0], z:2234},
+        "foo",
+        function(){}
+    ]
+};
+var view = createView(viewFunc, ['arg1', 'arg2'], root);
 
 var mouse = { x: 0, y: 0, pressed: false, pressedX: 0, pressedY: 0 };
 var hoveredItem = -1;
@@ -250,8 +270,8 @@ function getContent(value, meta, idx) {
 }
 
 function valuesByZ() {
-    return view.values.map ((v, i) => ({ v: v, m: view.meta[i], i: i }))
-                      .sort((a, b) => (a.m.z || 0) - (b.m.z || 0));
+    return view.context.values.map ((v, i) => ({ v: v, m: view.func.meta[i], i: i }))
+                              .sort((a, b) => (a.m.z || 0) - (b.m.z || 0));
 }
 
 function renderContent() {
@@ -260,7 +280,7 @@ function renderContent() {
 
 r.onMouseMove(function mouseMoved(x, y) {
     if (mouse.pressed && selectedItem >= 0) {
-        var meta = view.meta[selectedItem];
+        var meta = view.func.meta[selectedItem];
         meta.x += x - mouse.x;
         meta.y += y - mouse.y;
     }
@@ -279,7 +299,7 @@ r.onMouseDown(function mouseDown(x, y) {
     mouse.pressedY = y;
     selectedItem = hoveredItem;
     if (selectedItem >= 0) {
-        view.meta[selectedItem].z = -1;
+        view.func.meta[selectedItem].z = -1;
         valuesByZ().map((vmi, i) => vmi.m.z = i);
     }
     renderContent();
@@ -305,18 +325,18 @@ renderContent();
 
 function test(context, args) { console.log(apply(context, args)); }
 
-test({parent:root, actions:[]}, [1,2,"foo",{x:5}]);
-test({parent:root, actions:[5]}, [1,2,"foo",{x:5}]);
-test({parent:root, actions:["test"]}, [1,2,"foo",{x:5}]);
-test({parent:root, actions:[0,1,2,3]}, [1,2,"foo",{x:5}]);
-test({parent:root, actions:[[0,1,2,3]]}, [1,2,"foo",{x:5}]);
-test({parent:root, actions:[[1,[1,0]]]}, [1,2,"foo",{x:5}]);
-test({parent:root, actions:[[1,[1,23]]]}, [1,2,"foo",{x:5}]);
-test({parent:root, actions:[[1,[1,23],[-1,0],[-1,1]]]}, [1,2,"foo",{x:5}]);
-test({parent:root, actions:[[1,[1,23],[0,0,0],[-1,1]]]}, [1,2,"foo",{x:5}]);
-test({parent:root, actions:[[1,[1,23],[-1,1],[-1,2]]]}, [1,2,"foo",{x:5}]);
-test({parent:root, actions:[[1,[1,11]]]}, [1,2,"foo",{x:5}]);
-test({parent:root, actions:[[1,[1,11],[-1,3],[-1,2]]]}, [1,2,"foo",{foo:5}]);
-test({parent:root, actions:[[1,[1,11],[-1,3],[-1,2]]]}, [1,2,"foo",{foo:5,x:7}]);
-test({parent:root, actions:[[1,[1,11],[-1,3],[-1,2]]]}, [1,2,"x",{foo:5,x:7}]);
-test({parent:root, actions:[[1,[1,11],[-1,3],[-1,2]]]}, [1,2,"xx",{foo:5,x:7}]);
+test({parent:root.context, actions:[]}, [1,2,"foo",{x:5}]);
+test({parent:root.context, actions:[5]}, [1,2,"foo",{x:5}]);
+test({parent:root.context, actions:["test"]}, [1,2,"foo",{x:5}]);
+test({parent:root.context, actions:[0,1,2,3]}, [1,2,"foo",{x:5}]);
+test({parent:root.context, actions:[[0,1,2,3]]}, [1,2,"foo",{x:5}]);
+test({parent:root.context, actions:[[1,[1,0]]]}, [1,2,"foo",{x:5}]);
+test({parent:root.context, actions:[[1,[1,23]]]}, [1,2,"foo",{x:5}]);
+test({parent:root.context, actions:[[1,[1,23],[-1,0],[-1,1]]]}, [1,2,"foo",{x:5}]);
+test({parent:root.context, actions:[[1,[1,23],[0,0,0],[-1,1]]]}, [1,2,"foo",{x:5}]);
+test({parent:root.context, actions:[[1,[1,23],[-1,1],[-1,2]]]}, [1,2,"foo",{x:5}]);
+test({parent:root.context, actions:[[1,[1,11]]]}, [1,2,"foo",{x:5}]);
+test({parent:root.context, actions:[[1,[1,11],[-1,3],[-1,2]]]}, [1,2,"foo",{foo:5}]);
+test({parent:root.context, actions:[[1,[1,11],[-1,3],[-1,2]]]}, [1,2,"foo",{foo:5,x:7}]);
+test({parent:root.context, actions:[[1,[1,11],[-1,3],[-1,2]]]}, [1,2,"x",{foo:5,x:7}]);
+test({parent:root.context, actions:[[1,[1,11],[-1,3],[-1,2]]]}, [1,2,"xx",{foo:5,x:7}]);
