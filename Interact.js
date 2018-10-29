@@ -7,7 +7,7 @@ function del (o, p   ) { var v = (has(o, p) ? o[p] : null); delete o[p]; return 
 
 function type(o) {
     return (o === null || typeof o === 'undefined') ? 'null' :
-           Array.isArray(o)                         ? 'array'
+           (Array.isArray(o)                      ) ? 'array'
                                                     : typeof o;
 }
 
@@ -131,7 +131,7 @@ function stringOf(value) {
     var t = type(value);
     return (t === 'string'  ) ? '"' + value.replace(/\t/g, '    ').replace(/\r?\n/g, '\n ') + '"' :
            (t !== 'function') ? String(value)
-                              : String(value).replace(/^(function\s*(\w+)?\s*)?\(?([^\)]*)\)?\s*(\=\>|\{).*$/, "$2($3)")
+                              : String(value).replace(/^(function\s*(\w+)?\s*)?\(?([^\)]*)\)?\s*(\=\>|\{)(.|\s)*$/, "$2($3)")
                                              .replace(/\s/g, '')
                                              .replace(/^\(/, '[func](');
 }
