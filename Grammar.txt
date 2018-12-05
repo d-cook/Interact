@@ -1,8 +1,8 @@
-any      :: object | array | prim
-prim     :: string | number | bool | null | native-function
+any      :: object | array  | prim | native-function
+prim     :: string | number | bool | null
 
-index    :: number | string      <-- Array index or Object property
-lookup   :: [ number, index.. ]  <-- Distance up the context-chain (-1 for args), Indexes down into a context
+key      :: number | string      <-- Array index or Object property
+lookup   :: [ number, key.. ]    <-- Distance up the context-chain (-1 for args), Path down into that context
 
 action   :: prim                 <-- Actual prim value
             { string: action.. } <-- Object literal of actions
