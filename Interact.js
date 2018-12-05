@@ -79,7 +79,8 @@ function lookupValue(context, path) {
 function lookup(context, path) {
     if (type(path) !== 'array') { return path; }
     var ctx = lookupContext(context, path[0]);
-    var values = get(ctx, 'values') || ctx;
+    var values = (type(path[1]) === 'string') ? ctx
+                                              : get(ctx, 'values') || ctx;
     return lookupValue(values, path.slice(1));
 }
 
@@ -352,3 +353,7 @@ test({parent:root.context, actions:[[[1,9],[-1,3],[-1,2]]]}, [1,2,"foo",{foo:5}]
 test({parent:root.context, actions:[[[1,9],[-1,3],[-1,2]]]}, [1,2,"foo",{foo:5,x:7}]);
 test({parent:root.context, actions:[[[1,9],[-1,3],[-1,2]]]}, [1,2,"x",{foo:5,x:7}]);
 test({parent:root.context, actions:[[[1,9],[-1,3],[-1,2]]]}, [1,2,"xx",{foo:5,x:7}]);
+test({parent:root.context, actions:[[5],[x=>x, [0]]]}, [1,2,"foo",{x:5}]);
+test({parent:root.context, actions:[[5],[x=>x, [0,1]]]}, [1,2,"foo",{x:5}]);
+test({parent:root.context, actions:[[5],[x=>x, [0,"values"]]]}, [1,2,"foo",{x:5}]);
+test({parent:root.context, actions:[[5],[x=>x, [0,"parent"]]]}, [1,2,"foo",{x:5}]);
