@@ -216,7 +216,7 @@ var viewFunc = {
 };
 var view = createView(viewFunc, ['arg1', 'arg2'], root);
 
-var mouse = { x: 0, y: 0, pressed: false, pressedX: 0, pressedY: 0 };
+var mouse = { x: 0, y: 0, pressed: false, pressedX: 0, pressedY: 0, dragged: false };
 var hoveredItem = -1;
 var selectedItem = -1;
 
@@ -287,6 +287,7 @@ function renderContent() {
 }
 
 r.onMouseMove(function mouseMoved(x, y) {
+    if (mouse.pressed) { mouse.dragged = true; }
     if (mouse.pressed && selectedItem >= 0) {
         var meta = view.func.meta[selectedItem];
         meta.x += x - mouse.x;
@@ -315,9 +316,14 @@ r.onMouseDown(function mouseDown(x, y) {
 
 r.onMouseUp(function mouseUp(x, y) {
     mouse.pressed = false;
+    if (!mouse.dragged) { mouseClicked(x, y); }
+    mouse.dragged = false;
     renderContent();
 });
 
+function mouseClicked(x, y) {
+    
+}
 function fitToWindow() { r.resize(window.innerWidth-4, window.innerHeight-4); }
 
 var c = r.getCanvas();
