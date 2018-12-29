@@ -191,8 +191,8 @@ var rootFunc = {
     args   : [],
     actions: [
         null, // Reassigned to the root context below
-        lookupValue, lookupContext, lookup, /*evalObject, evalArray,*/ evalCall, evalAction, apply,
-        has, get, set, del, type, _if, and, or, /*newObj,*/ array, object, keys, length, truthy, not,
+        lookupValue, lookupContext, lookup, evalCall, evalAction, apply,
+        has, get, set, del, type, _if, and, or, array, object, keys, length, truthy, not,
         plus, minus, mult, div, mod, EQ, NE, LT, GT, LTE, GTE,
         slice, push, unshift, pop, shift, charAt, substring
     ]
