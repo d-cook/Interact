@@ -64,6 +64,8 @@ function shift  (a    ) { return (type(a) !== 'array') ? null : [].shift  .apply
 function charAt    (s,i  ) { return (type(s) !== 'string') ? null : s.charAt   (i   ); }
 function substring (s,b,e) { return (type(s) !== 'string') ? null : s.substring(b, e); }
 
+function _id(x) { return x; }
+
 function lookupContext(context, dist) {
     return (dist < 0) ? get(get(context, 'values'), 0) || [] :
            (dist > 0) ? lookupContext(get(context, 'parent'), dist-1)
@@ -191,7 +193,7 @@ var rootFunc = {
         lookupValue, lookupContext, lookup, evalCall, evalAction, apply,
         has, get, set, del, type, _if, and, or, array, object, keys, length, truthy, not,
         plus, minus, mult, div, mod, EQ, NE, LT, GT, LTE, GTE,
-        slice, push, unshift, pop, shift, charAt, substring
+        slice, push, unshift, pop, shift, charAt, substring, _id
     ]
 };
 var root = createView(rootFunc, []);
@@ -281,10 +283,30 @@ function valuesByZ() {
                               .sort((a, b) => (a.m.z || 0) - (b.m.z || 0));
 }
 
+function refreshView() {
+    view = createView(view.func, view.args, view.parent);
+}
+
 function renderContent() {
     r.render([].concat.apply([], valuesByZ().reverse().map(vmi =>
         getContent(vmi.v, vmi.m, hoveredItem === vmi.i, selectedItem === vmi.i)
     )));
+}
+
+function bringToFront(idx) {
+    view.func.meta[idx].z = -1;
+    valuesByZ().map((vmi, i) => vmi.m.z = i);
+}
+
+function arrayMatch(a1, a2) {
+    var t1 = type(a1);
+    var t2 = type(a2);
+    return (t1 !== 'array' || t2 !== 'array')
+        ? (a1 === a2)
+        : (a1.length === a2.length) && a1.reduce(
+            (m, v, i) => m && arrayMatch(v, a2[i]),
+            true
+        );
 }
 
 r.onMouseMove(function mouseMoved(x, y) {
@@ -328,10 +350,7 @@ r.onMouseDown(function mouseDown(x, y) {
     mouse.pressedX = x;
     mouse.pressedY = y;
     selectedItem = hoveredItem;
-    if (selectedItem >= 0) {
-        view.func.meta[selectedItem].z = -1;
-        valuesByZ().map((vmi, i) => vmi.m.z = i);
-    }
+    if (selectedItem >= 0) { bringToFront(selectedItem); }
     renderContent();
 });
 
@@ -344,6 +363,20 @@ r.onMouseUp(function mouseUp(x, y) {
 
 function mouseClicked(x, y) {
     
+}
+
+function addAction(action, meta) {
+    selectedItem = view.func.actions.reduce(
+        (s, a, i) => (s < 0 && arrayMatch(a, action)) ? (i+1) : s,
+        -1
+    );
+    if (selectedItem < 0) {
+        selectedItem = view.context.values.length;
+        view.func.actions.push(action);
+        view.func.meta.push(meta);
+        refreshView();
+    }
+    bringToFront(selectedItem);
 }
 
 function fitToWindow() { r.resize(window.innerWidth-4, window.innerHeight-4); }
