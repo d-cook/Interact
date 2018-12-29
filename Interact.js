@@ -128,6 +128,7 @@ function applyContext(func, args) {
 
 var textSize = 14; // text height
 var spacing = 12;  // spacing between components
+var rowSize = textSize + spacing;
 
 var r = Renderer('top left', { size: textSize, baseline: 'top' });
 
@@ -155,7 +156,7 @@ function metaHeight(value) {
     var t = type(value);
     var len = length(value);
     var ao = (t === 'array' || t === 'object'), s = (t === 'string');
-    return (ao) ? (textSize + spacing) * Math.max(len, 1) + spacing :
+    return (ao) ? rowSize * Math.max(len, 1) + spacing :
            ( s) ? textSize * stringOf(value).split('\n').length
                 : textSize;
 }
@@ -249,7 +250,7 @@ function getContent(value, meta, idx) {
                         value.map((v, i) =>
                             getContent(v, {
                                 x: meta.x + spacing,
-                                y: meta.y + spacing + i * (textSize + spacing),
+                                y: meta.y + spacing + i * rowSize,
                                 w: metaWidth(v, 1),
                                 h: textSize
                             })
@@ -257,14 +258,14 @@ function getContent(value, meta, idx) {
                     )
                 ) :
         (o) ? [['rect', meta.x, meta.y, meta.w, meta.h]]
-                .concat(keys(value).map((k, i) => ['#888888 text', k+' : ', meta.x+0 + spacing, meta.y + spacing + i * (textSize + spacing)]))
-                .concat(keys(value).map((k, i) => ['#888888 text', k+' : ', meta.x+1 + spacing, meta.y + spacing + i * (textSize + spacing)]))
+                .concat(keys(value).map((k, i) => ['#888888 text', k+' : ', meta.x+0 + spacing, meta.y + spacing + i * rowSize]))
+                .concat(keys(value).map((k, i) => ['#888888 text', k+' : ', meta.x+1 + spacing, meta.y + spacing + i * rowSize]))
                 .concat(
                     [].concat.apply([],
                         keys(value).map((k, i) =>
                             getContent(value[k], {
                                 x: meta.x + spacing + r.textWidth(k+' : ', 1),
-                                y: meta.y + spacing + i * (textSize + spacing),
+                                y: meta.y + spacing + i * rowSize,
                                 w: metaWidth(value[k], 1),
                                 h: textSize
                             })
