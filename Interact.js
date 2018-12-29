@@ -218,16 +218,15 @@ var view = createView(viewFunc, ['arg1', 'arg2'], root);
 
 var mouse = { x: 0, y: 0, pressed: false, pressedX: 0, pressedY: 0, dragged: false };
 var hoveredItem = -1;
+var hoveredSubItem = -1;
 var selectedItem = -1;
 
-function getContent(value, meta, idx) {
-    var nested = !(idx >= 0); // because (undefined < 0) is false
+function getContent(value, meta, hovered, selected, nested) {
     var t = type(value);
     var a = (t === 'array'), o = (t === 'object'), s = (t === 'string');
     var na = (nested && a), no = (nested && o);
-    var selected = (selectedItem === idx);
     return (
-        (selected || hoveredItem === idx)
+        (hovered || selected)
             ? [[(selected ? 'cyan' : '#FFEE44')+' filled rect', meta.x - 2, meta.y - 2, meta.w + 4, meta.h + 4]]
             : []
     )
@@ -253,7 +252,7 @@ function getContent(value, meta, idx) {
                                 y: meta.y + spacing + i * rowSize,
                                 w: metaWidth(v, 1),
                                 h: textSize
-                            })
+                            }, (hovered && hoveredSubItem === i), false, true)
                         )
                     )
                 ) :
@@ -268,7 +267,7 @@ function getContent(value, meta, idx) {
                                 y: meta.y + spacing + i * rowSize,
                                 w: metaWidth(value[k], 1),
                                 h: textSize
-                            })
+                            }, (hovered && hoveredSubItem === i), false, true)
                         )
                     )
                 ) :
@@ -283,7 +282,9 @@ function valuesByZ() {
 }
 
 function renderContent() {
-    r.render([].concat.apply([], valuesByZ().reverse().map(vmi => getContent(vmi.v, vmi.m, vmi.i))));
+    r.render([].concat.apply([], valuesByZ().reverse().map(vmi =>
+        getContent(vmi.v, vmi.m, hoveredItem === vmi.i, selectedItem === vmi.i)
+    )));
 }
 
 r.onMouseMove(function mouseMoved(x, y) {
@@ -295,10 +296,30 @@ r.onMouseMove(function mouseMoved(x, y) {
     }
     mouse.x = x;
     mouse.y = y;
+    hoveredSubItem = -1;
     hoveredItem = valuesByZ().reduce((h, vmi) => {
         var m = vmi.m;
         return (h < 0 && x >= m.x && x <= m.x + m.w && y >= m.y && y <= m.y + m.h) ? vmi.i : h;
     }, -1);
+    var item = view.context.values[hoveredItem];
+    var t = type(item);
+    if (t === 'array' || t === 'object') {
+        var m = view.func.meta[hoveredItem];
+        var ix = x - m.x - spacing, iy = y - m.y - spacing;
+        if (ix >= 0 && iy >= 0) {
+            hoveredSubItem =
+                keys(item).reduce((h, k, i) => {
+                    var v = item[k];
+                    var ox = ix - (t !== 'object' ? 0 : r.textWidth(k+' : ', 1));
+                    return (h < 0 &&
+                        ox >= 0 &&
+                        ox <= metaWidth(v, 1) &&
+                        iy >= (i * rowSize) &&
+                        iy <= (i * rowSize) + textSize
+                    ) ? i : h;
+                }, -1);
+        }
+    }
     renderContent();
 });
 
@@ -324,6 +345,7 @@ r.onMouseUp(function mouseUp(x, y) {
 function mouseClicked(x, y) {
     
 }
+
 function fitToWindow() { r.resize(window.innerWidth-4, window.innerHeight-4); }
 
 var c = r.getCanvas();
