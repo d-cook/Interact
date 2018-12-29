@@ -47,11 +47,10 @@ function LTE  () { var r = arguments[0]; for(var i=1; i<arguments.length; i++) {
 function GTE  () { var r = arguments[0]; for(var i=1; i<arguments.length; i++) { if (!(r >= (r = arguments[i]))) return false; } return true; }
 
 function array () { return [].slice.apply(arguments); }
-function object() {
+function object(keys, values) {
     var obj = Object.create(null);
-    for(var i=0; i<arguments.length; i++) {
-        var kv = arguments[i];
-        if (type(kv) === 'array') { obj[''+kv[0]] = truthy(kv[1]) ? kv[1] : null; }
+    if (type(keys) === 'array' && type(values) === 'array') {
+        keys.map((k, i) => obj[''+k] = truthy(values[i]) ? values[i] : null);
     }
     return obj;
 }
@@ -209,12 +208,11 @@ var viewFunc = {
         "ab\tc\td\nefg\nhij\rklm\r\nnop",
         true,
         null,
-        [[1, 16], "x", 1],
-        [[1, 16], "y", [0]],
-        [[1, 16], "z", 2234],
+        [[1, 16], "x", "y", "z"],
+        [[1, 16], 1, [0], 2234],
         [[1, 16], 3, 4],
-        [[1, 16], 1, 2, [0,7], {}, 'A', 'B', function foo(x,y){return x+y/10;}],
-        [[1, 17], [0,5], [0,6], [0,7]],
+        [[1, 16], 1, 2, [0,6], {}, 'A', 'B', function foo(x,y){return x+y/10;}],
+        [[1, 17], [0,5], [0,6]],
         "foo",
         function(){}
     ]
