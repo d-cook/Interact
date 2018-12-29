@@ -115,17 +115,13 @@ function applyContext(func, args) {
 // -----------------------------
 
 // TODO: Assign mouse/keyboard actions:
-//   [DBL-CLICK]  Expand/Collapse inner item
-//   [DragDrop]   Drag inner item out of container (copy) (do not confuse objects and views)
-//   [DELETE]     Delete selected item from container
+//   [Click]      Copy inner item out of container
+//   [DELETE]     Delete selected item (and associated action)
 //   [DRAG]       Drag container
 //   [DragHandle] Resize selected container (handles appear on selected)
 //                Scroll container view
 //                Auto-size container (to fit contents)
 //                Auto-layout container contents (with recursive auto-size?)
-//   [DragDrop]   Add item to container
-//                Rename object keys --> keys are selectable (see edit values)
-//   [DragDrop]   Re-order array contents
 //   [Just type]  Edit values (a caret appears?) (as an action!)
 //   [Just type]  Create new values at point of last click in selected item
 //                Add arguments to a function (currying?) / create call-template from function
