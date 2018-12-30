@@ -117,7 +117,8 @@ function applyContext(func, args) {
 // -----------------------------
 
 // TODO: Assign mouse/keyboard actions:
-//   [Click]      Copy inner item out of container
+//   [Click]      Expand/Collapse nested items
+//   [Dbl-Click]  Copy inner item out of container
 //   [DELETE]     Delete selected item (and associated action)
 //   [DRAG]       Drag container
 //   [DragHandle] Resize selected container (handles appear on selected)
@@ -372,6 +373,10 @@ r.onMouseUp(function mouseUp(x, y) {
 });
 
 function mouseClicked(x, y) {
+    
+}
+
+function mouseDoubleClicked(x, y) {
     if (hoveredSubItem !== -1) {
         var src = view.context.values[hoveredItem];
         var meta = view.func.meta.children[hoveredItem];
@@ -381,10 +386,6 @@ function mouseClicked(x, y) {
             createMeta(item, meta.x + meta.w + spacing, y, 0, 1)
         );
     }
-}
-
-function mouseDoubleClicked(x, y) {
-    
 }
 
 function addAction(action, meta) {
