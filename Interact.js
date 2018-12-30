@@ -362,7 +362,18 @@ r.onMouseUp(function mouseUp(x, y) {
 });
 
 function mouseClicked(x, y) {
-    
+    if (hoveredSubItem >= 0) {
+        var src = view.context.values[hoveredItem];
+        var meta = view.func.meta[hoveredItem];
+        var key = (type(src) !== 'object') ? hoveredSubItem : keys(src)[hoveredSubItem];
+        var item = src[key];
+        addAction([[1,9],[0,hoveredItem],key], {
+            x: meta.x + meta.w + spacing,
+            y: meta.y + spacing + (hoveredSubItem * rowSize),
+            w: metaWidth(item),
+            h: metaHeight(item)
+        });
+    }
 }
 
 function addAction(action, meta) {
