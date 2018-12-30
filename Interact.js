@@ -165,13 +165,14 @@ function metaHeight(value) {
 
 function createMeta(values) {
     var y = 0, h = 0;
-    return values.map((v, i) => ({
+    var ks = keys(values);
+    return object(ks, ks.map((k, i) => ({
         x: spacing,
         y: (y = y + h + spacing),
-        w: metaWidth(v),
-        h: (h = metaHeight(v)),
+        w: metaWidth(values[k]),
+        h: (h = metaHeight(values[k])),
         z: i // z-index
-    }));
+    })));
 }
 
 function createView(func, args, parent) {
@@ -384,7 +385,7 @@ function addAction(action, meta) {
     if (selectedItem < 0) {
         selectedItem = view.context.values.length;
         view.func.actions.push(action);
-        view.func.meta.push(meta);
+        view.func.meta[selectedItem] = meta;
         refreshView();
     }
     bringToFront(selectedItem);

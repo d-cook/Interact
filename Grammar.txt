@@ -16,7 +16,7 @@ func     :: {                    <-- User defined Function
    "parent" : context,
    "actions": [ action.. ],
    "args"   : [ string.. ],
-   "meta"   : [ { .. }.. ]
+   "meta"   : { .. }
 }
 
 view     :: {                    <-- Editor view
