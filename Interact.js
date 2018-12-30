@@ -229,7 +229,7 @@ var viewFunc = {
 };
 var view = createView(viewFunc, ['arg1', 'arg2'], root);
 
-var mouse = { x: 0, y: 0, pressed: false, pressedX: 0, pressedY: 0, dragged: false };
+var mouse = { x: 0, y: 0, pressed: false, pressedX: 0, pressedY: 0, dragged: false, clicks: 0 };
 var hoveredItem = -1;
 var hoveredSubItem = -1;
 var selectedItem = -1;
@@ -321,6 +321,7 @@ function arrayMatch(a1, a2) {
 }
 
 r.onMouseMove(function mouseMoved(x, y) {
+    mouse.clicks = 0;
     if (mouse.pressed) { mouse.dragged = true; }
     if (mouse.pressed && selectedItem >= 0) {
         var meta = view.func.meta.children[selectedItem];
@@ -355,9 +356,17 @@ r.onMouseDown(function mouseDown(x, y) {
     renderContent();
 });
 
+var clickTimer = null;
+
 r.onMouseUp(function mouseUp(x, y) {
     mouse.pressed = false;
-    if (!mouse.dragged) { mouseClicked(x, y); }
+    if (!mouse.dragged) {
+        mouse.clicks++;
+        clearTimeout(clickTimer);
+        clickTimer = setTimeout(() => mouse.clicks = 0, 350);
+        if (mouse.clicks % 2 === 0) { mouseDoubleClicked(x, y); }
+        else if (mouse.clicks === 1) { mouseClicked(x, y); }
+    }
     mouse.dragged = false;
     renderContent();
 });
@@ -372,6 +381,10 @@ function mouseClicked(x, y) {
             createMeta(item, meta.x + meta.w + spacing, y, 0, 1)
         );
     }
+}
+
+function mouseDoubleClicked(x, y) {
+    
 }
 
 function addAction(action, meta) {
