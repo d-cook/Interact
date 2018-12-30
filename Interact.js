@@ -143,41 +143,51 @@ function stringOf(value) {
                                              .replace(/^\(/, '[func](');
 }
 
-function metaWidth(value, nested) {
+function createMeta(value, x, y, z, levels) {
     var t = type(value);
-    var a = (t === 'array'), o = (t === 'object'), s = (t === 'string');
-    var n = nested && (a||o);
-    return (n) ? 16 :
-           (a) ? (2 * spacing) + value.reduce((m, v) => Math.max(m, metaWidth(v, 1)), 0) :
-           (o) ? (2 * spacing) + keys(value).reduce((m, k) => Math.max(m, r.textWidth(k+' : ') + metaWidth(value[k], 1)), 0) :
-           (s) ? stringOf(value).split('\n').reduce((m, s) => Math.max(m, r.textWidth(s)), 0)
-               : r.textWidth(stringOf(value));
+    var meta = { x: (x || 0), y: (y || 0), z: (z || 0) };
+    if (t !== 'object' && t !== 'array') {
+        var str = stringOf(value);
+        meta.w = (t === 'string')
+           ? str.split('\n').reduce((m, s) => Math.max(m, r.textWidth(s)), 0)
+           : r.textWidth(str);
+        meta.h = (t === 'string')
+           ? textSize * str.split('\n').length
+           : textSize;
+        return meta;
+    } else if (levels < 0) {
+        meta.w = 16;
+        meta.h = textSize;
+        meta.state = 'collapsed';
+    } else {
+        var ks = keys(value);
+        var h = spacing;
+        var w = spacing;
+        meta.children = object(ks, ks.map((k, i) => {
+            var x = spacing + (t !== 'object' ? 0 : r.textWidth(k+' : '));
+            var m = createMeta(value[k], x, h, i, (levels || 0) - 1);
+            w = Math.max(w, m.x + m.w + spacing);
+            h += m.h + spacing;
+            return m;
+        }));
+        meta.w = w;
+        meta.h = h;
+        meta.state = 'expanded';
+    }
+    return meta;
 }
 
-function metaHeight(value) {
-    var t = type(value);
-    var len = length(value);
-    var ao = (t === 'array' || t === 'object'), s = (t === 'string');
-    return (ao) ? rowSize * Math.max(len, 1) + spacing :
-           ( s) ? textSize * stringOf(value).split('\n').length
-                : textSize;
-}
-
-function createMeta(values) {
-    var y = 0, h = 0;
-    var ks = keys(values);
-    return object(ks, ks.map((k, i) => ({
-        x: spacing,
-        y: (y = y + h + spacing),
-        w: metaWidth(values[k]),
-        h: (h = metaHeight(values[k])),
-        z: i // z-index
-    })));
+function subMeta(meta, idx) {
+    var m = (meta.children && meta.children[idx]);
+    m = (m) ? Object.assign({}, m) : createMeta(null);
+    m.x += meta.x;
+    m.y += meta.y;
+    return m;
 }
 
 function createView(func, args, parent) {
     var context = applyContext(func, args);
-    if (!func.meta) { func.meta = createMeta(context.values); }
+    if (!func.meta) { func.meta = createMeta(context.values, 0, 0, 0, 1); }
     return {
         func   : func,
         context: context,
@@ -224,10 +234,12 @@ var hoveredItem = -1;
 var hoveredSubItem = -1;
 var selectedItem = -1;
 
-function getContent(value, meta, hovered, selected, nested) {
+function getContent(value, meta, hovered, selected) {
     var t = type(value);
-    var a = (t === 'array'), o = (t === 'object'), s = (t === 'string');
-    var na = (nested && a), no = (nested && o);
+    var a = (t === 'array');
+    var o = (t === 'object');
+    var s = (t === 'string');
+    var c = (meta.state === 'collapsed');
     return (
         (hovered || selected)
             ? [[(selected ? 'cyan' : '#FFEE44')+' filled rect', meta.x - 2, meta.y - 2, meta.w + 4, meta.h + 4]]
@@ -235,57 +247,55 @@ function getContent(value, meta, hovered, selected, nested) {
     )
     .concat([['white filled rect', meta.x, meta.y, meta.w, meta.h]])
     .concat(
-       (na) ? [['filled #EEEEEE rect', meta.x, meta.y, meta.w, meta.h],
-               ['black rect', meta.x, meta.y, meta.w, meta.h],
+     (c&&a) ? [['filled #EEEEEE rect', meta.x, meta.y, 16, textSize],
+               ['black rect',          meta.x, meta.y, 16, textSize],
                ['filled #666666 rect', meta.x + 3, meta.y + meta.h - 6, 2, 2],
                ['filled #666666 rect', meta.x + 7, meta.y + meta.h - 6, 2, 2],
                ['filled #666666 rect', meta.x +11, meta.y + meta.h - 6, 2, 2]
               ] :
-       (no) ? [['filled #EEEEEE rect', meta.x, meta.y, meta.w, meta.h],
-               ['black rect', meta.x, meta.y, meta.w, meta.h],
+     (c&&o) ? [['filled #EEEEEE rect', meta.x, meta.y, 16, textSize],
+               ['black rect',          meta.x, meta.y, 16, textSize],
                ['filled #666666 rect', meta.x + 4, meta.y + meta.h - 6, 2, 2],
                ['filled #666666 rect', meta.x + 4, meta.y + meta.h -10, 2, 2]
               ] :
-        (a) ? [['rect', meta.x, meta.y, meta.w, meta.h]]
-                .concat(
-                    [].concat.apply([],
-                        value.map((v, i) =>
-                            getContent(v, {
-                                x: meta.x + spacing,
-                                y: meta.y + spacing + i * rowSize,
-                                w: metaWidth(v, 1),
-                                h: textSize
-                            }, (hovered && hoveredSubItem === i), false, true)
-                        )
-                    )
-                ) :
-        (o) ? [['rect', meta.x, meta.y, meta.w, meta.h]]
-                .concat(keys(value).map((k, i) => ['#888888 text', k+' : ', meta.x+0 + spacing, meta.y + spacing + i * rowSize]))
-                .concat(keys(value).map((k, i) => ['#888888 text', k+' : ', meta.x+1 + spacing, meta.y + spacing + i * rowSize]))
-                .concat(
-                    [].concat.apply([],
-                        keys(value).map((k, i) =>
-                            getContent(value[k], {
-                                x: meta.x + spacing + r.textWidth(k+' : ', 1),
-                                y: meta.y + spacing + i * rowSize,
-                                w: metaWidth(value[k], 1),
-                                h: textSize
-                            }, (hovered && hoveredSubItem === i), false, true)
-                        )
-                    )
-                ) :
+     (a||o) ? [['rect', meta.x, meta.y, meta.w, meta.h]]
+                .concat(a ? [] : []
+                    .concat(keys(value).map((k, i) => ['#888888 text', k+' : ', meta.x+0 + spacing, meta.y + spacing + i * rowSize]))
+                    .concat(keys(value).map((k, i) => ['#888888 text', k+' : ', meta.x+1 + spacing, meta.y + spacing + i * rowSize]))
+                )
+                .concat([].concat.apply([], keys(value).map(k =>
+                    getContent(value[k], subMeta(meta, k), (hovered && hoveredSubItem === k))
+                ))) :
         (s) ? stringOf(value).split('\n').map((s, i) => ['text', s, meta.x, meta.y + (textSize * i)])
             : [['text', stringOf(value), meta.x, meta.y]]
     );
 }
 
 function valuesByZ() {
-    return view.context.values.map ((v, i) => ({ v: v, m: view.func.meta[i], i: i }))
-                              .sort((a, b) => (a.m.z || 0) - (b.m.z || 0));
+    return view.context.values
+        .map((v, i) => ({ v: v, m: view.func.meta.children[i], i: i }))
+        .sort((a, b) => (a.m.z || 0) - (b.m.z || 0));
 }
 
 function refreshView() {
     view = createView(view.func, view.args, view.parent);
+    refreshMeta(view.context.values, view.func.meta);
+}
+
+function refreshMeta(value, meta) {
+    if (meta.children) {
+        var y = keys(meta.children)
+            .map(k => meta.children[k])
+            .reduce((h, m) => Math.max(h, m.y + m.h + spacing), meta.h);
+        keys(value).map(k => {
+            var m = meta.children[k];
+            if (!m) {
+                m = meta.children[k] = createMeta(value[k], spacing, y, 0, -1);
+                y = m.y + m.h + spacing;
+            }
+            refreshMeta(value[k], m);
+        });
+    }
 }
 
 function renderContent() {
@@ -295,7 +305,7 @@ function renderContent() {
 }
 
 function bringToFront(idx) {
-    view.func.meta[idx].z = -1;
+    view.func.meta.children[idx].z = -1;
     valuesByZ().map((vmi, i) => vmi.m.z = i);
 }
 
@@ -313,7 +323,7 @@ function arrayMatch(a1, a2) {
 r.onMouseMove(function mouseMoved(x, y) {
     if (mouse.pressed) { mouse.dragged = true; }
     if (mouse.pressed && selectedItem >= 0) {
-        var meta = view.func.meta[selectedItem];
+        var meta = view.func.meta.children[selectedItem];
         meta.x += x - mouse.x;
         meta.y += y - mouse.y;
     }
@@ -327,21 +337,11 @@ r.onMouseMove(function mouseMoved(x, y) {
     var item = view.context.values[hoveredItem];
     var t = type(item);
     if (t === 'array' || t === 'object') {
-        var m = view.func.meta[hoveredItem];
-        var ix = x - m.x - spacing, iy = y - m.y - spacing;
-        if (ix >= 0 && iy >= 0) {
-            hoveredSubItem =
-                keys(item).reduce((h, k, i) => {
-                    var v = item[k];
-                    var ox = ix - (t !== 'object' ? 0 : r.textWidth(k+' : ', 1));
-                    return (h < 0 &&
-                        ox >= 0 &&
-                        ox <= metaWidth(v, 1) &&
-                        iy >= (i * rowSize) &&
-                        iy <= (i * rowSize) + textSize
-                    ) ? i : h;
-                }, -1);
-        }
+        var meta = subMeta(view.func.meta, hoveredItem);
+        hoveredSubItem = keys(meta.children).reduce((h, k) => {
+            var m = subMeta(meta, k);
+            return (h < 0 && x >= m.x && x <= m.x + m.w && y >= m.y && y <= m.y + m.h) ? k : h;
+        }, -1);
     }
     renderContent();
 });
@@ -363,17 +363,14 @@ r.onMouseUp(function mouseUp(x, y) {
 });
 
 function mouseClicked(x, y) {
-    if (hoveredSubItem >= 0) {
+    if (hoveredSubItem !== -1) {
         var src = view.context.values[hoveredItem];
-        var meta = view.func.meta[hoveredItem];
-        var key = (type(src) !== 'object') ? hoveredSubItem : keys(src)[hoveredSubItem];
-        var item = src[key];
-        addAction([[1,9],[0,hoveredItem],key], {
-            x: meta.x + meta.w + spacing,
-            y: meta.y + spacing + (hoveredSubItem * rowSize),
-            w: metaWidth(item),
-            h: metaHeight(item)
-        });
+        var meta = view.func.meta.children[hoveredItem];
+        var item = src[hoveredSubItem];
+        addAction(
+            [[1, 9], [0, hoveredItem], hoveredSubItem],
+            createMeta(item, meta.x + meta.w + spacing, y, 0, 1)
+        );
     }
 }
 
@@ -385,7 +382,7 @@ function addAction(action, meta) {
     if (selectedItem < 0) {
         selectedItem = view.context.values.length;
         view.func.actions.push(action);
-        view.func.meta[selectedItem] = meta;
+        view.func.meta.children[selectedItem] = meta;
         refreshView();
     }
     bringToFront(selectedItem);
