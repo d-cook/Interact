@@ -143,7 +143,6 @@ var spacing = 12;  // spacing between components
 var rowSize = textSize + spacing;
 
 // State
-var mouse = { x: 0, y: 0, pressed: false, pressedX: 0, pressedY: 0, dragged: false, clicks: 0 };
 var hoveredItem = -1;
 var hoveredSubItem = -1;
 var selectedItem = -1;
@@ -154,9 +153,6 @@ var ui;   // ui renderer
 
 function init() {
     ui = Renderer('top left', { size: textSize, baseline: 'top' });
-    ui.onMouseMove(mouseMoved);
-    ui.onMouseDown(mouseDown);
-    ui.onMouseUp(mouseUp);
 
     root = createView({
         parent : null,
@@ -189,7 +185,44 @@ function init() {
         ]
     }, ['arg1', 'arg2'], root);
 
-    var fitToWindow = () => ui.resize(window.innerWidth-4, window.innerHeight-4);
+    var clickTimer = null;
+    var pressed = false;
+    var dragged = false;
+    var clicks = 0;
+    var prevX = 0;
+    var prevY = 0;
+
+    ui.onMouseDown((x, y) => {
+        pressed = true;
+        mouseDown(x, y);
+    });
+
+    ui.onMouseUp((x, y) => {
+        pressed = false;
+        mouseUp(x, y);
+        if (!dragged) {
+            clicks++;
+            clearTimeout(clickTimer);
+            clickTimer = setTimeout(() => clicks = 0, 350);
+            mouseClicked(x, y, clicks);
+        }
+        dragged = false;
+    });
+
+    ui.onMouseMove((x, y) => {
+        clicks = 0;
+        mouseMoved(x, y, prevX, prevY);
+        if (pressed) {
+            dragged = true;
+            mouseDragged(x, y, prevX, prevY);
+        }
+        prevX = x;
+        prevY = y;
+    });
+
+    function fitToWindow() {
+        ui.resize(window.innerWidth-4, window.innerHeight-4);
+    }
 
     var c = ui.getCanvas();
     c.style.border = '2px solid red';
@@ -350,16 +383,30 @@ function arrayMatch(a1, a2) {
         );
 }
 
-function mouseMoved(x, y) {
-    mouse.clicks = 0;
-    if (mouse.pressed) { mouse.dragged = true; }
-    if (mouse.pressed && selectedItem >= 0) {
-        var meta = view.func.meta.children[selectedItem];
-        meta.x += x - mouse.x;
-        meta.y += y - mouse.y;
+function mouseDown(x, y) {
+    selectedItem = hoveredItem;
+    if (selectedItem >= 0) { bringToFront(selectedItem); }
+    renderContent();
+}
+
+function mouseUp(x, y) {
+    renderContent();
+}
+
+function mouseClicked(x, y, clicks) {
+    if (clicks > 1 && hoveredSubItem !== -1) {
+        var src = view.context.values[hoveredItem];
+        var meta = view.func.meta.children[hoveredItem];
+        var item = src[hoveredSubItem];
+        addAction(
+            [[1, 9], [0, hoveredItem], hoveredSubItem],
+            createMeta(item, meta.x + meta.w + spacing, y, 0, 1)
+        );
     }
-    mouse.x = x;
-    mouse.y = y;
+    renderContent();
+}
+
+function mouseMoved(x, y, prevX, prevY) {
     hoveredSubItem = -1;
     hoveredItem = valuesByZ().reduce((h, vmi) => {
         var m = vmi.m;
@@ -377,44 +424,13 @@ function mouseMoved(x, y) {
     renderContent();
 }
 
-function mouseDown(x, y) {
-    mouse.pressed = true;
-    mouse.pressedX = x;
-    mouse.pressedY = y;
-    selectedItem = hoveredItem;
-    if (selectedItem >= 0) { bringToFront(selectedItem); }
-    renderContent();
-}
-
-var clickTimer = null;
-
-function mouseUp(x, y) {
-    mouse.pressed = false;
-    if (!mouse.dragged) {
-        mouse.clicks++;
-        clearTimeout(clickTimer);
-        clickTimer = setTimeout(() => mouse.clicks = 0, 350);
-        if (mouse.clicks % 2 === 0) { mouseDoubleClicked(x, y); }
-        else if (mouse.clicks === 1) { mouseClicked(x, y); }
+function mouseDragged(x, y, prevX, prevY) {
+    if (selectedItem >= 0) {
+        var meta = view.func.meta.children[selectedItem];
+        meta.x += x - prevX;
+        meta.y += y - prevY;
     }
-    mouse.dragged = false;
     renderContent();
-}
-
-function mouseClicked(x, y) {
-    
-}
-
-function mouseDoubleClicked(x, y) {
-    if (hoveredSubItem !== -1) {
-        var src = view.context.values[hoveredItem];
-        var meta = view.func.meta.children[hoveredItem];
-        var item = src[hoveredSubItem];
-        addAction(
-            [[1, 9], [0, hoveredItem], hoveredSubItem],
-            createMeta(item, meta.x + meta.w + spacing, y, 0, 1)
-        );
-    }
 }
 
 function addAction(action, meta) {
