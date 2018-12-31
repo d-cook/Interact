@@ -1,5 +1,9 @@
 // Paste "Renderer" code HERE from: https://github.com/d-cook/Render
 
+// ------------------------
+// ---- BASE FUNCTIONS ----
+// ------------------------
+
 function has (o, p   ) { try { return Object.prototype.hasOwnProperty.call(o, p); } catch(e) { return false; } }
 function get (o, p   ) { return has(o, p) ? o[p] : null; }
 function set (o, p, v) { var t = type(o); if (t === 'object' || t === 'array') { o[p] = v; } return v; }
@@ -66,6 +70,10 @@ function substring (s,b,e) { return (type(s) !== 'string') ? null : s.substring(
 
 function _id(x) { return x; }
 
+// -----------------------------
+// ---- EVAL IMPLEMENTATION ----
+// -----------------------------
+
 function lookupContext(context, dist) {
     return (dist < 0) ? get(get(context, 'values'), 0) || [] :
            (dist > 0) ? lookupContext(get(context, 'parent'), dist-1)
@@ -129,19 +137,80 @@ function applyContext(func, args) {
 //   [Just type]  Create new values at point of last click in selected item
 //                Add arguments to a function (currying?) / create call-template from function
 
+// Settings
 var textSize = 14; // text height
 var spacing = 12;  // spacing between components
 var rowSize = textSize + spacing;
 
-var r = Renderer('top left', { size: textSize, baseline: 'top' });
+// State
+var mouse = { x: 0, y: 0, pressed: false, pressedX: 0, pressedY: 0, dragged: false, clicks: 0 };
+var hoveredItem = -1;
+var hoveredSubItem = -1;
+var selectedItem = -1;
 
-function stringOf(value) {
-    var t = type(value);
-    return (t === 'string'  ) ? '"' + value.replace(/\t/g, '    ').replace(/\r?\n/g, '\n ') + '"' :
-           (t !== 'function') ? String(value)
-                              : String(value).replace(/^(function\s*(\w+)?\s*)?\(?([^\)]*)\)?\s*(\=\>|\{)(.|\s)*$/, "$2($3)")
-                                             .replace(/\s/g, '')
-                                             .replace(/^\(/, '[func](');
+var root; // root view
+var view; // current view
+var ui;   // ui renderer
+
+function init() {
+    ui = Renderer('top left', { size: textSize, baseline: 'top' });
+    ui.onMouseMove(mouseMoved);
+    ui.onMouseDown(mouseDown);
+    ui.onMouseUp(mouseUp);
+
+    root = createView({
+        parent : null,
+        args   : [],
+        actions: [
+            null, // Reassigned to the root context below
+            lookupValue, lookupContext, lookup, evalCall, evalAction, apply,
+            has, get, set, del, type, _if, and, or, array, object, keys, length, truthy, not,
+            plus, minus, mult, div, mod, EQ, NE, LT, GT, LTE, GTE,
+            slice, push, unshift, pop, shift, charAt, substring, _id
+        ]
+    }, [], null);
+    root.context.values[1] = root.context; // Because it was undefined the first time
+
+    view = createView({
+        parent : root.context,
+        args   : ['param1', 'param2'],
+        actions: [
+            123,
+            "ab\tc\td\nefg\nhij\rklm\r\nnop",
+            true,
+            null,
+            [[1, 16], "x", "y", "z"],
+            [[1, 16], 1, [0], 2234],
+            [[1, 16], 3, 4],
+            [[1, 16], 1, 2, [0,6], {}, 'A', 'B', function foo(x,y){return x+y/10;}],
+            [[1, 17], [0,5], [0,6]],
+            "foo",
+            function(){}
+        ]
+    }, ['arg1', 'arg2'], root);
+
+    var fitToWindow = () => ui.resize(window.innerWidth-4, window.innerHeight-4);
+
+    var c = ui.getCanvas();
+    c.style.border = '2px solid red';
+    window.addEventListener('resize', fitToWindow);
+    document.body.style.margin = '0';
+    document.body.style.overflow = 'hidden';
+    document.body.appendChild(c);
+
+    fitToWindow();
+    renderContent();
+}
+
+function createView(func, args, parent) {
+    var context = applyContext(func, args);
+    if (!func.meta) { func.meta = createMeta(context.values, 0, 0, 0, 1); }
+    return {
+        func   : func,
+        context: context,
+        parent : parent,
+        args   : args
+    };
 }
 
 function createMeta(value, x, y, z, levels) {
@@ -150,8 +219,8 @@ function createMeta(value, x, y, z, levels) {
     if (t !== 'object' && t !== 'array') {
         var str = stringOf(value);
         meta.w = (t === 'string')
-           ? str.split('\n').reduce((m, s) => Math.max(m, r.textWidth(s)), 0)
-           : r.textWidth(str);
+           ? str.split('\n').reduce((m, s) => Math.max(m, ui.textWidth(s)), 0)
+           : ui.textWidth(str);
         meta.h = (t === 'string')
            ? textSize * str.split('\n').length
            : textSize;
@@ -165,7 +234,7 @@ function createMeta(value, x, y, z, levels) {
         var h = spacing;
         var w = spacing;
         meta.children = object(ks, ks.map((k, i) => {
-            var x = spacing + (t !== 'object' ? 0 : r.textWidth(k+' : '));
+            var x = spacing + (t !== 'object' ? 0 : ui.textWidth(k+' : '));
             var m = createMeta(value[k], x, h, i, (levels || 0) - 1);
             w = Math.max(w, m.x + m.w + spacing);
             h += m.h + spacing;
@@ -186,54 +255,14 @@ function subMeta(meta, idx) {
     return m;
 }
 
-function createView(func, args, parent) {
-    var context = applyContext(func, args);
-    if (!func.meta) { func.meta = createMeta(context.values, 0, 0, 0, 1); }
-    return {
-        func   : func,
-        context: context,
-        parent : parent,
-        args   : args
-    };
+function stringOf(value) {
+    var t = type(value);
+    return (t === 'string'  ) ? '"' + value.replace(/\t/g, '    ').replace(/\r?\n/g, '\n ') + '"' :
+           (t !== 'function') ? String(value)
+                              : String(value).replace(/^(function\s*(\w+)?\s*)?\(?([^\)]*)\)?\s*(\=\>|\{)(.|\s)*$/, "$2($3)")
+                                             .replace(/\s/g, '')
+                                             .replace(/^\(/, '[func](');
 }
-
-var rootFunc = {
-    parent : null,
-    args   : [],
-    actions: [
-        null, // Reassigned to the root context below
-        lookupValue, lookupContext, lookup, evalCall, evalAction, apply,
-        has, get, set, del, type, _if, and, or, array, object, keys, length, truthy, not,
-        plus, minus, mult, div, mod, EQ, NE, LT, GT, LTE, GTE,
-        slice, push, unshift, pop, shift, charAt, substring, _id
-    ]
-};
-var root = createView(rootFunc, []);
-root.context.values[1] = root.context; // Because it was undefined the first time
-
-var viewFunc = {
-    parent : root.context,
-    args   : ['param1', 'param2'],
-    actions: [
-        123,
-        "ab\tc\td\nefg\nhij\rklm\r\nnop",
-        true,
-        null,
-        [[1, 16], "x", "y", "z"],
-        [[1, 16], 1, [0], 2234],
-        [[1, 16], 3, 4],
-        [[1, 16], 1, 2, [0,6], {}, 'A', 'B', function foo(x,y){return x+y/10;}],
-        [[1, 17], [0,5], [0,6]],
-        "foo",
-        function(){}
-    ]
-};
-var view = createView(viewFunc, ['arg1', 'arg2'], root);
-
-var mouse = { x: 0, y: 0, pressed: false, pressedX: 0, pressedY: 0, dragged: false, clicks: 0 };
-var hoveredItem = -1;
-var hoveredSubItem = -1;
-var selectedItem = -1;
 
 function getContent(value, meta, hovered, selected) {
     var t = type(value);
@@ -300,7 +329,7 @@ function refreshMeta(value, meta) {
 }
 
 function renderContent() {
-    r.render([].concat.apply([], valuesByZ().reverse().map(vmi =>
+    ui.render([].concat.apply([], valuesByZ().reverse().map(vmi =>
         getContent(vmi.v, vmi.m, hoveredItem === vmi.i, selectedItem === vmi.i)
     )));
 }
@@ -321,7 +350,7 @@ function arrayMatch(a1, a2) {
         );
 }
 
-r.onMouseMove(function mouseMoved(x, y) {
+function mouseMoved(x, y) {
     mouse.clicks = 0;
     if (mouse.pressed) { mouse.dragged = true; }
     if (mouse.pressed && selectedItem >= 0) {
@@ -346,20 +375,20 @@ r.onMouseMove(function mouseMoved(x, y) {
         }, -1);
     }
     renderContent();
-});
+}
 
-r.onMouseDown(function mouseDown(x, y) {
+function mouseDown(x, y) {
     mouse.pressed = true;
     mouse.pressedX = x;
     mouse.pressedY = y;
     selectedItem = hoveredItem;
     if (selectedItem >= 0) { bringToFront(selectedItem); }
     renderContent();
-});
+}
 
 var clickTimer = null;
 
-r.onMouseUp(function mouseUp(x, y) {
+function mouseUp(x, y) {
     mouse.pressed = false;
     if (!mouse.dragged) {
         mouse.clicks++;
@@ -370,7 +399,7 @@ r.onMouseUp(function mouseUp(x, y) {
     }
     mouse.dragged = false;
     renderContent();
-});
+}
 
 function mouseClicked(x, y) {
     
@@ -402,18 +431,11 @@ function addAction(action, meta) {
     bringToFront(selectedItem);
 }
 
-function fitToWindow() { r.resize(window.innerWidth-4, window.innerHeight-4); }
+init();
 
-var c = r.getCanvas();
-c.style.border = '2px solid red';
-window.addEventListener('resize', fitToWindow);
-document.body.style.margin = '0';
-document.body.style.overflow = 'hidden';
-document.body.appendChild(c);
-fitToWindow();
-renderContent();
-
-// ---- TESTS ------
+// ---------------
+// ---- TESTS ----
+// ---------------
 
 function test(context, args) { console.log(apply(context, args)); }
 
