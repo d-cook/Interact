@@ -1,4 +1,4 @@
-// Paste "Renderer" code HERE from: https://github.com/d-cook/Render
+// Paste "Renderer 1.0.0" code HERE ( https://github.com/d-cook/Render/releases/tag/1.0.0 )
 
 // ------------------------
 // ---- BASE FUNCTIONS ----
@@ -147,14 +147,11 @@ var hoveredItem = -1;
 var hoveredSubItem = -1;
 var selectedItem = -1;
 
-var root; // root view
-var view; // current view
-var ui;   // ui renderer
+// UI Renderer
+var ui = Renderer('top left', { size: textSize, baseline: 'top' });
 
-function init() {
-    ui = Renderer('top left', { size: textSize, baseline: 'top' });
-
-    root = createView({
+// Root view
+var root = createView({
         parent : null,
         args   : [],
         actions: [
@@ -167,7 +164,8 @@ function init() {
     }, [], null);
     root.context.values[1] = root.context; // Because it was undefined the first time
 
-    view = createView({
+// Active view
+var view = createView({
         parent : root.context,
         args   : ['param1', 'param2'],
         actions: [
@@ -184,56 +182,6 @@ function init() {
             function(){}
         ]
     }, ['arg1', 'arg2'], root);
-
-    var clickTimer = null;
-    var pressed = false;
-    var dragged = false;
-    var clicks = 0;
-    var prevX = 0;
-    var prevY = 0;
-
-    ui.onMouseDown((x, y) => {
-        pressed = true;
-        mouseDown(x, y);
-    });
-
-    ui.onMouseUp((x, y) => {
-        pressed = false;
-        mouseUp(x, y);
-        if (!dragged) {
-            clicks++;
-            clearTimeout(clickTimer);
-            clickTimer = setTimeout(() => clicks = 0, 350);
-            mouseClicked(x, y, clicks);
-        }
-        dragged = false;
-    });
-
-    ui.onMouseMove((x, y) => {
-        clicks = 0;
-        mouseMoved(x, y, prevX, prevY);
-        if (pressed) {
-            dragged = true;
-            mouseDragged(x, y, prevX, prevY);
-        }
-        prevX = x;
-        prevY = y;
-    });
-
-    function fitToWindow() {
-        ui.resize(window.innerWidth-4, window.innerHeight-4);
-    }
-
-    var c = ui.getCanvas();
-    c.style.border = '2px solid red';
-    window.addEventListener('resize', fitToWindow);
-    document.body.style.margin = '0';
-    document.body.style.overflow = 'hidden';
-    document.body.appendChild(c);
-
-    fitToWindow();
-    renderContent();
-}
 
 function createView(func, args, parent) {
     var context = applyContext(func, args);
@@ -383,17 +331,33 @@ function arrayMatch(a1, a2) {
         );
 }
 
-function mouseDown(x, y) {
+function addAction(action, meta) {
+    selectedItem = view.func.actions.reduce(
+        (s, a, i) => (s < 0 && arrayMatch(a, action)) ? (i+1) : s,
+        -1
+    );
+    if (selectedItem < 0) {
+        selectedItem = view.context.values.length;
+        view.func.actions.push(action);
+        view.func.meta.children[selectedItem] = meta;
+        refreshView();
+    }
+    bringToFront(selectedItem);
+}
+
+// -- Mouse Events --
+
+function onMouseUp(x, y) {
+    renderContent();
+}
+
+function onMouseDown(x, y) {
     selectedItem = hoveredItem;
     if (selectedItem >= 0) { bringToFront(selectedItem); }
     renderContent();
 }
 
-function mouseUp(x, y) {
-    renderContent();
-}
-
-function mouseClicked(x, y, clicks) {
+function onMouseClick(x, y, clicks) {
     if (clicks > 1 && hoveredSubItem !== -1) {
         var src = view.context.values[hoveredItem];
         var meta = view.func.meta.children[hoveredItem];
@@ -406,7 +370,7 @@ function mouseClicked(x, y, clicks) {
     renderContent();
 }
 
-function mouseMoved(x, y, prevX, prevY) {
+function onMouseMove(x, y, prevX, prevY) {
     hoveredSubItem = -1;
     hoveredItem = valuesByZ().reduce((h, vmi) => {
         var m = vmi.m;
@@ -424,7 +388,7 @@ function mouseMoved(x, y, prevX, prevY) {
     renderContent();
 }
 
-function mouseDragged(x, y, prevX, prevY) {
+function onMouseDrag(x, y, prevX, prevY) {
     if (selectedItem >= 0) {
         var meta = view.func.meta.children[selectedItem];
         meta.x += x - prevX;
@@ -433,21 +397,16 @@ function mouseDragged(x, y, prevX, prevY) {
     renderContent();
 }
 
-function addAction(action, meta) {
-    selectedItem = view.func.actions.reduce(
-        (s, a, i) => (s < 0 && arrayMatch(a, action)) ? (i+1) : s,
-        -1
-    );
-    if (selectedItem < 0) {
-        selectedItem = view.context.values.length;
-        view.func.actions.push(action);
-        view.func.meta.children[selectedItem] = meta;
-        refreshView();
-    }
-    bringToFront(selectedItem);
-}
+ui.onMouseUp(onMouseUp);
+ui.onMouseDown(onMouseDown);
+ui.onMouseMove(onMouseMove);
+ui.onMouseDrag(onMouseDrag);
+ui.onMouseClick(onMouseClick, 350);
 
-init();
+// -- Initialize --
+
+ui.fitToWindow();
+renderContent();
 
 // ---------------
 // ---- TESTS ----
