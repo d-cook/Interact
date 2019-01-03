@@ -352,14 +352,20 @@ function selectHoveredItem() {
     if (selectedItem >= 0) { bringToFront(selectedItem); }
 }
 
-function extractHoveredItem(mouseY) {
+function extractHoveredItem() {
     if (hoveredSubItem !== -1) {
         var src = view.context.values[hoveredItem];
-        var meta = view.func.meta.children[hoveredItem];
+        var meta1 = view.func.meta;
+        var meta2 = meta1.children[hoveredItem];
+        var meta3 = meta2.children[hoveredSubItem];
         var item = src[hoveredSubItem];
         addAction(
             [[1, 9], [0, hoveredItem], hoveredSubItem],
-            createMeta(item, meta.x + meta.w + spacing, mouseY, 0, 1)
+            createMeta(item,
+                meta2.x + meta2.w + spacing,
+                meta1.y + meta2.y + meta3.y,
+                0, 1
+            )
         );
     }
 }
@@ -413,7 +419,7 @@ ui.onMouseDrag(function onMouseDrag(x, y, prevX, prevY) {
 ui.onMouseClick(function onMouseClick(x, y, clicks) {
     if (clicks > 1) {
         // Double-Click
-        extractHoveredItem(y);
+        extractHoveredItem();
     } else {
         // Single-Click
     }
