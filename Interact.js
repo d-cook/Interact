@@ -345,37 +345,39 @@ function addAction(action, meta) {
     bringToFront(selectedItem);
 }
 
-// -- Mouse Events --
+// -- UI interactions --
 
-function onMouseUp(x, y) {
-    renderContent();
-}
-
-function onMouseDown(x, y) {
+function selectHoveredItem() {
     selectedItem = hoveredItem;
     if (selectedItem >= 0) { bringToFront(selectedItem); }
-    renderContent();
 }
 
-function onMouseClick(x, y, clicks) {
-    if (clicks > 1 && hoveredSubItem !== -1) {
+function extractHoveredItem(mouseY) {
+    if (hoveredSubItem !== -1) {
         var src = view.context.values[hoveredItem];
         var meta = view.func.meta.children[hoveredItem];
         var item = src[hoveredSubItem];
         addAction(
             [[1, 9], [0, hoveredItem], hoveredSubItem],
-            createMeta(item, meta.x + meta.w + spacing, y, 0, 1)
+            createMeta(item, meta.x + meta.w + spacing, mouseY, 0, 1)
         );
     }
-    renderContent();
 }
 
-function onMouseMove(x, y, prevX, prevY) {
-    hoveredSubItem = -1;
+function moveSelectedItem(dx, dy) {
+    if (selectedItem >= 0) {
+        var meta = view.func.meta.children[selectedItem];
+        meta.x += dx;
+        meta.y += dy;
+    }
+}
+
+function setHoveredItems(x, y) {
     hoveredItem = valuesByZ().reduce((h, vmi) => {
         var m = vmi.m;
         return (h < 0 && x >= m.x && x <= m.x + m.w && y >= m.y && y <= m.y + m.h) ? vmi.i : h;
     }, -1);
+    hoveredSubItem = -1;
     var item = view.context.values[hoveredItem];
     var t = type(item);
     if (t === 'array' || t === 'object') {
@@ -385,25 +387,38 @@ function onMouseMove(x, y, prevX, prevY) {
             return (h < 0 && x >= m.x && x <= m.x + m.w && y >= m.y && y <= m.y + m.h) ? k : h;
         }, -1);
     }
-    renderContent();
 }
 
-function onMouseDrag(x, y, prevX, prevY) {
-    if (selectedItem >= 0) {
-        var meta = view.func.meta.children[selectedItem];
-        meta.x += x - prevX;
-        meta.y += y - prevY;
+// -- Initialize UI --
+
+ui.onMouseUp(function onMouseUp(x, y) {
+    renderContent();
+});
+
+ui.onMouseDown(function onMouseDown(x, y) {
+    selectHoveredItem();
+    renderContent();
+});
+
+ui.onMouseMove(function onMouseMove(x, y, prevX, prevY) {
+    setHoveredItems(x, y);
+    renderContent();
+});
+
+ui.onMouseDrag(function onMouseDrag(x, y, prevX, prevY) {
+    moveSelectedItem(x - prevX, y - prevY);
+    renderContent();
+});
+
+ui.onMouseClick(function onMouseClick(x, y, clicks) {
+    if (clicks > 1) {
+        // Double-Click
+        extractHoveredItem(y);
+    } else {
+        // Single-Click
     }
     renderContent();
-}
-
-ui.onMouseUp(onMouseUp);
-ui.onMouseDown(onMouseDown);
-ui.onMouseMove(onMouseMove);
-ui.onMouseDrag(onMouseDrag);
-ui.onMouseClick(onMouseClick, 350);
-
-// -- Initialize --
+}, 350);
 
 ui.fitToWindow();
 renderContent();
