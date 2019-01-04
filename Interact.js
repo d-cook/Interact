@@ -33,7 +33,8 @@ function or (L, R) {
     return or.apply(null, args);
 }
 
-function keys   (o) { return Object.keys(o||{}) || []; }
+function keys   (o) { return (type(o) === 'array') ? o.map((v, i) => i) : Object.keys(o||{}) || []; }
+function values (o) { return keys(o).map((k, v) => o[k]); }
 function length (o) { return(Object.keys(o||{}) || []).length; }
 function truthy (v) { return v || v === 0 || v === ''; }
 function not    (v) { return !truthy(v); }
@@ -54,7 +55,7 @@ function array () { return [].slice.apply(arguments); }
 function object(keys, values) {
     var obj = Object.create(null);
     if (type(keys) === 'array' && type(values) === 'array') {
-        keys.map((k, i) => obj[''+k] = truthy(values[i]) ? values[i] : null);
+        keys.map((k, i) => obj[''+k] = values[i]);
     }
     return obj;
 }
