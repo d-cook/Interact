@@ -185,7 +185,7 @@ var view = createView({
 
 function createView(func, args, parent) {
     var context = applyContext(func, args);
-    if (!func.meta) { func.meta = createMeta(context.values, 0, 0, 0, 1); }
+    if (!func.meta) { func.meta = createMeta(context.values, 1); }
     return {
         func   : func,
         context: context,
@@ -194,7 +194,7 @@ function createView(func, args, parent) {
     };
 }
 
-function createMeta(value, x, y, z, levels) {
+function createMeta(value, levels, x, y, i) {
     var t = type(value);
     var meta = { x: (x || 0), y: (y || 0), z: (z || 0) };
     if (t !== 'object' && t !== 'array') {
@@ -216,7 +216,7 @@ function createMeta(value, x, y, z, levels) {
         var w = spacing;
         meta.children = object(ks, ks.map((k, i) => {
             var x = spacing + (t !== 'object' ? 0 : ui.textWidth(k+' : '));
-            var m = createMeta(value[k], x, h, i, (levels || 0) - 1);
+            var m = createMeta(value[k], (levels || 0) - 1, x, h, i);
             w = Math.max(w, m.x + m.w + spacing);
             h += m.h + spacing;
             return m;
@@ -301,7 +301,7 @@ function refreshMeta(value, meta) {
         keys(value).map(k => {
             var m = meta.children[k];
             if (!m) {
-                m = meta.children[k] = createMeta(value[k], spacing, y, 0, -1);
+                m = meta.children[k] = createMeta(value[k], -1, spacing, y);
                 y = m.y + m.h + spacing;
             }
             refreshMeta(value[k], m);
@@ -361,10 +361,9 @@ function extractHoveredItem() {
         var item = src[hoveredSubItem];
         addAction(
             [[1, 9], [0, hoveredItem], hoveredSubItem],
-            createMeta(item,
+            createMeta(item, 1,
                 meta2.x + meta2.w + spacing,
-                meta1.y + meta2.y + meta3.y,
-                0, 1
+                meta1.y + meta2.y + meta3.y
             )
         );
     }
