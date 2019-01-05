@@ -212,16 +212,17 @@ function createMeta(value, levels, x, y, z) {
         meta.h = textSize;
         meta.state = 'collapsed';
     } else {
-        var ks = keys(value);
         var h = spacing;
         var w = spacing;
-        meta.children = object(ks, ks.map((k, i) => {
+        var ks = keys(value);
+        var vals = ks.map((k, i) => {
             var x = spacing + (t !== 'object' ? 0 : ui.textWidth(k+' : '));
             var m = createMeta(value[k], (levels || 0) - 1, x, h, i);
             w = Math.max(w, m.x + m.w + spacing);
             h += m.h + spacing;
             return m;
-        }));
+        });
+        meta.children = (t === 'array') ? vals : object(ks, vals);
         meta.w = w;
         meta.h = h;
         meta.state = 'expanded';
@@ -295,9 +296,7 @@ function refreshView() {
 
 function refreshMeta(value, meta) {
     if (meta.children) {
-        var y = keys(meta.children)
-            .map(k => meta.children[k])
-            .reduce((h, m) => Math.max(h, m.y + m.h + spacing), meta.h);
+        var y = values(meta.children).reduce((h, m) => Math.max(h, m.y + m.h + spacing), meta.h);
         keys(value).map((k, i) => {
             var m = meta.children[k];
             if (!m) {
