@@ -175,7 +175,7 @@ var view = createView({
             true,
             null,
             [[1, 16], "x", "y", "z"],
-            [[1, 16], 1, [0], 2234],
+            [[1, 16], "(1,\n2,\n3)", [0], 2234],
             [[1, 16], 3, 4],
             [[1, 16], 1, 2, [0,6], {}, 'A', 'B', function foo(x,y){return x+y/10;}],
             [[1, 17], [0,5], [0,6]],
@@ -277,13 +277,11 @@ function getContent(value, meta, hovered, selected) {
                ['filled #666666 rect', meta.x + 4, meta.y + meta.h -10, 2, 2]
               ] :
      (a||o) ? [['rect', meta.x, meta.y, meta.w, meta.h]]
-                .concat(a ? [] : []
-                    .concat(keys(value).map((k, i) => ['#888888 text', k+' : ', meta.x+0 + spacing, meta.y + spacing + i * rowSize]))
-                    .concat(keys(value).map((k, i) => ['#888888 text', k+' : ', meta.x+1 + spacing, meta.y + spacing + i * rowSize]))
-                )
-                .concat([].concat.apply([], metasByZ(meta.children).reverse().map(km =>
-                    getContent(value[m.k], subMeta(meta, km.k), (hovered && hoveredSubItem === km.k))
-                ))) :
+                .concat([].concat.apply([], metasByZ(meta.children).reverse().map(km => {
+                    var m = subMeta(meta, km.k);
+                    return getContent(value[km.k], m, (hovered && hoveredSubItem === km.k))
+                        .concat(a ? [] : [['#AA8844 text', km.k+' : ', meta.x + spacing + 0, m.y]])
+                }))) :
         (s) ? stringOf(value).split('\n').map((s, i) => ['text', s, meta.x, meta.y + (textSize * i)])
             : [['text', stringOf(value), meta.x, meta.y]]
     );
