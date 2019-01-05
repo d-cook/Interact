@@ -195,9 +195,9 @@ function createView(func, args, parent) {
     };
 }
 
-function createMeta(value, levels, x, y, i) {
+function createMeta(value, levels, x, y, z) {
     var t = type(value);
-    var meta = { x: (x || 0), y: (y || 0), z: (z || 0) };
+    var meta = { x:(x||0), y:(y||0), z:(z||0) };
     if (t !== 'object' && t !== 'array') {
         var str = stringOf(value);
         meta.w = (t === 'string')
@@ -229,12 +229,17 @@ function createMeta(value, levels, x, y, i) {
     return meta;
 }
 
-function subMeta(meta, idx) {
-    var m = (meta.children && meta.children[idx]);
+function subMeta(meta, key) {
+    var m = (meta.children && meta.children[key]);
     m = (m) ? Object.assign({}, m) : createMeta(null);
     m.x += meta.x;
     m.y += meta.y;
     return m;
+}
+
+function metasByZ(metas) {
+    return keys(metas).map(k => ({ k:k, m:metas[k]}))
+                      .sort((a, b) => a.m.z - b.m.z);
 }
 
 function stringOf(value) {
@@ -275,18 +280,12 @@ function getContent(value, meta, hovered, selected) {
                     .concat(keys(value).map((k, i) => ['#888888 text', k+' : ', meta.x+0 + spacing, meta.y + spacing + i * rowSize]))
                     .concat(keys(value).map((k, i) => ['#888888 text', k+' : ', meta.x+1 + spacing, meta.y + spacing + i * rowSize]))
                 )
-                .concat([].concat.apply([], keys(value).map(k =>
-                    getContent(value[k], subMeta(meta, k), (hovered && hoveredSubItem === k))
+                .concat([].concat.apply([], metasByZ(meta.children).reverse().map(km =>
+                    getContent(value[m.k], subMeta(meta, km.k), (hovered && hoveredSubItem === km.k))
                 ))) :
         (s) ? stringOf(value).split('\n').map((s, i) => ['text', s, meta.x, meta.y + (textSize * i)])
             : [['text', stringOf(value), meta.x, meta.y]]
     );
-}
-
-function valuesByZ() {
-    return view.context.values
-        .map((v, i) => ({ v: v, m: view.func.meta.children[i], i: i }))
-        .sort((a, b) => (a.m.z || 0) - (b.m.z || 0));
 }
 
 function refreshView() {
@@ -299,10 +298,10 @@ function refreshMeta(value, meta) {
         var y = keys(meta.children)
             .map(k => meta.children[k])
             .reduce((h, m) => Math.max(h, m.y + m.h + spacing), meta.h);
-        keys(value).map(k => {
+        keys(value).map((k, i) => {
             var m = meta.children[k];
             if (!m) {
-                m = meta.children[k] = createMeta(value[k], -1, spacing, y);
+                m = meta.children[k] = createMeta(value[k], -1, spacing, y, i);
                 y = m.y + m.h + spacing;
             }
             refreshMeta(value[k], m);
@@ -311,14 +310,14 @@ function refreshMeta(value, meta) {
 }
 
 function renderContent() {
-    ui.render([].concat.apply([], valuesByZ().reverse().map(vmi =>
-        getContent(vmi.v, vmi.m, hoveredItem === vmi.i, selectedItem === vmi.i)
+    ui.render([].concat.apply([], metasByZ(view.func.meta.children).reverse().map(km =>
+        getContent(view.context.values[km.k], km.m, hoveredItem === km.k, selectedItem === km.k)
     )));
 }
 
 function bringToFront(idx) {
     view.func.meta.children[idx].z = -1;
-    valuesByZ().map((vmi, i) => vmi.m.z = i);
+    metasByZ(view.func.meta.children).map((km, i) => km.m.z = i);
 }
 
 function arrayMatch(a1, a2) {
@@ -337,7 +336,7 @@ function addAction(action, meta) {
         (s, a, i) => (s < 0 && arrayMatch(a, action)) ? (i+1) : s,
         -1
     );
-    if (selectedItem < 0) {
+    if (selectedItem === -1) {
         selectedItem = view.context.values.length;
         view.func.actions.push(action);
         view.func.meta.children[selectedItem] = meta;
@@ -350,7 +349,7 @@ function addAction(action, meta) {
 
 function selectHoveredItem() {
     selectedItem = hoveredItem;
-    if (selectedItem >= 0) { bringToFront(selectedItem); }
+    if (selectedItem !== -1) { bringToFront(selectedItem); }
 }
 
 function extractHoveredItem() {
@@ -371,7 +370,7 @@ function extractHoveredItem() {
 }
 
 function moveSelectedItem(dx, dy) {
-    if (selectedItem >= 0) {
+    if (selectedItem !== -1) {
         var meta = view.func.meta.children[selectedItem];
         meta.x += dx;
         meta.y += dy;
@@ -379,18 +378,18 @@ function moveSelectedItem(dx, dy) {
 }
 
 function setHoveredItems(x, y) {
-    hoveredItem = valuesByZ().reduce((h, vmi) => {
-        var m = vmi.m;
-        return (h < 0 && x >= m.x && x <= m.x + m.w && y >= m.y && y <= m.y + m.h) ? vmi.i : h;
+    hoveredItem = metasByZ(view.func.meta.children).reduce((h, km) => {
+        var m = km.m;
+        return (h === -1 && x >= m.x && x <= m.x + m.w && y >= m.y && y <= m.y + m.h) ? km.k : h
     }, -1);
     hoveredSubItem = -1;
     var item = view.context.values[hoveredItem];
     var t = type(item);
     if (t === 'array' || t === 'object') {
         var meta = subMeta(view.func.meta, hoveredItem);
-        hoveredSubItem = keys(meta.children).reduce((h, k) => {
-            var m = subMeta(meta, k);
-            return (h < 0 && x >= m.x && x <= m.x + m.w && y >= m.y && y <= m.y + m.h) ? k : h;
+        hoveredSubItem = metasByZ(meta.children).reduce((h, km) => {
+            var m = subMeta(meta, km.k);
+            return (h === -1 && x >= m.x && x <= m.x + m.w && y >= m.y && y <= m.y + m.h) ? km.k : h;
         }, -1);
     }
 }
