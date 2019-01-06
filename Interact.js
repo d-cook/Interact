@@ -1,4 +1,4 @@
-// Paste "Renderer 1.0.0" code HERE ( https://github.com/d-cook/Render/releases/tag/1.0.0 )
+// Paste "Renderer 1.1.0" code HERE ( https://github.com/d-cook/Render/releases/tag/1.1.0 )
 
 // ------------------------
 // ---- BASE FUNCTIONS ----
@@ -422,8 +422,11 @@ ui.onMouseClick(function onMouseClick(x, y, clicks) {
     renderContent();
 }, 350);
 
-ui.fitToWindow();
-renderContent();
+ui.fitToWindow(function onResize(w, h) {
+    view.func.meta.w = w;
+    view.func.meta.h = h;
+    renderContent();
+});
 
 // ---------------
 // ---- TESTS ----
