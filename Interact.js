@@ -29,7 +29,6 @@ function or (L, R) {
     return or.apply(null, args);
 }
 
-function newObj ( ) { return Object.create(null); }
 function keys   (o) { return Object.keys(o||{}) || []; }
 function length (o) { return(Object.keys(o||{}) || []).length; }
 function truthy (v) { return v || v === 0 || v === ''; }
@@ -46,6 +45,16 @@ function LT   () { var r = arguments[0]; for(var i=1; i<arguments.length; i++) {
 function GT   () { var r = arguments[0]; for(var i=1; i<arguments.length; i++) { if (!(r >  (r = arguments[i]))) return false; } return true; }
 function LTE  () { var r = arguments[0]; for(var i=1; i<arguments.length; i++) { if (!(r <= (r = arguments[i]))) return false; } return true; }
 function GTE  () { var r = arguments[0]; for(var i=1; i<arguments.length; i++) { if (!(r >= (r = arguments[i]))) return false; } return true; }
+
+function array () { return [].slice.apply(arguments); }
+function object() {
+    var obj = Object.create(null);
+    for(var i=0; i<arguments.length; i++) {
+        var kv = arguments[i];
+        if (type(kv) === 'array') { obj[''+kv[0]] = truthy(kv[1]) ? kv[1] : null; }
+    }
+    return obj;
+}
 
 function slice  (a,b,e) { return (type(a) !== 'array') ? null : [].slice  .apply(a, [].slice.call(arguments, 1)); }
 function push   (a    ) { return (type(a) !== 'array') ? null : [].push   .apply(a, [].slice.call(arguments, 1)); }
@@ -68,23 +77,10 @@ function lookupValue(context, path) {
 }
 
 function lookup(context, path) {
+    if (type(path) !== 'array') { return path; }
     var ctx = lookupContext(context, path[0]);
     var values = get(ctx, 'values') || ctx;
     return lookupValue(values, path.slice(1));
-}
-
-function evalObject(context, objTemplate) {
-    var keys = Object.keys(objTemplate);
-    var obj = {};
-    for (var i = 0; i < keys.length; i++) {
-        var k = keys[i];
-        obj[k] = evalAction(context, objTemplate[k]);
-    }
-    return obj;
-}
-
-function evalArray(context, arrayTemplate) {
-    return arrayTemplate.map(a => evalCalc(context, a));
 }
 
 function evalCall(context, entries) {
@@ -95,17 +91,13 @@ function evalCall(context, entries) {
 }
 
 function evalAction(context, action) {
-    var t = type(action);
-    return (t === 'null'   ) ? null :
-           (t === 'object' ) ? evalObject(context, action) :
-           (t !== 'array'  ) ? action :
-           (action[0] !== 1) ? evalArray(context, action.slice(1))
-                             : evalCall(context, action.slice(1));
+    return (type(action) === 'array') ? evalCall(context, action)
+                                      : action;
 }
 
 function apply(func, args) {
     var vals = applyContext(func, args).values;
-    return (vals.length > 0) ? vals[vals.length - 1] : null;
+    return (vals.length > 1) ? vals[vals.length - 1] : null;
 }
 
 function applyContext(func, args) {
@@ -199,8 +191,8 @@ var rootFunc = {
     args   : [],
     actions: [
         null, // Reassigned to the root context below
-        lookupValue, lookupContext, lookup, evalObject, evalArray, evalCall, evalAction, apply,
-        has, get, set, del, type, _if, and, or, newObj, keys, length, truthy, not,
+        lookupValue, lookupContext, lookup, /*evalObject, evalArray,*/ evalCall, evalAction, apply,
+        has, get, set, del, type, _if, and, or, /*newObj,*/ array, object, keys, length, truthy, not,
         plus, minus, mult, div, mod, EQ, NE, LT, GT, LTE, GTE,
         slice, push, unshift, pop, shift, charAt, substring
     ]
@@ -216,8 +208,12 @@ var viewFunc = {
         "ab\tc\td\nefg\nhij\rklm\r\nnop",
         true,
         null,
-        [0, 1, 2, [0, 3, 4], {}, 'A', 'B', function foo(x,y){return x+y/10;}],
-        {x:1, y:[0], z:2234},
+        [[1, 16], "x", 1],
+        [[1, 16], "y", [0]],
+        [[1, 16], "z", 2234],
+        [[1, 16], 3, 4],
+        [[1, 16], 1, 2, [0,7], {}, 'A', 'B', function foo(x,y){return x+y/10;}],
+        [[1, 17], [0,5], [0,6], [0,7]],
         "foo",
         function(){}
     ]
@@ -345,14 +341,14 @@ test({parent:root.context, actions:[]}, [1,2,"foo",{x:5}]);
 test({parent:root.context, actions:[5]}, [1,2,"foo",{x:5}]);
 test({parent:root.context, actions:["test"]}, [1,2,"foo",{x:5}]);
 test({parent:root.context, actions:[0,1,2,3]}, [1,2,"foo",{x:5}]);
-test({parent:root.context, actions:[[0,1,2,3]]}, [1,2,"foo",{x:5}]);
-test({parent:root.context, actions:[[1,[1,0]]]}, [1,2,"foo",{x:5}]);
-test({parent:root.context, actions:[[1,[1,23]]]}, [1,2,"foo",{x:5}]);
-test({parent:root.context, actions:[[1,[1,23],[-1,0],[-1,1]]]}, [1,2,"foo",{x:5}]);
-test({parent:root.context, actions:[[1,[1,23],[0,0,0],[-1,1]]]}, [1,2,"foo",{x:5}]);
-test({parent:root.context, actions:[[1,[1,23],[-1,1],[-1,2]]]}, [1,2,"foo",{x:5}]);
-test({parent:root.context, actions:[[1,[1,11]]]}, [1,2,"foo",{x:5}]);
-test({parent:root.context, actions:[[1,[1,11],[-1,3],[-1,2]]]}, [1,2,"foo",{foo:5}]);
-test({parent:root.context, actions:[[1,[1,11],[-1,3],[-1,2]]]}, [1,2,"foo",{foo:5,x:7}]);
-test({parent:root.context, actions:[[1,[1,11],[-1,3],[-1,2]]]}, [1,2,"x",{foo:5,x:7}]);
-test({parent:root.context, actions:[[1,[1,11],[-1,3],[-1,2]]]}, [1,2,"xx",{foo:5,x:7}]);
+test({parent:root.context, actions:[[[1,16],1,2,3]]}, [1,2,"foo",{x:5}]);
+test({parent:root.context, actions:[[[1,0]]]}, [1,2,"foo",{x:5}]);
+test({parent:root.context, actions:[[[1,22]]]}, [1,2,"foo",{x:5}]);
+test({parent:root.context, actions:[[[1,22],[-1,0],[-1,1]]]}, [1,2,"foo",{x:5}]);
+test({parent:root.context, actions:[[[1,22],[0,0,0],[-1,1]]]}, [1,2,"foo",{x:5}]);
+test({parent:root.context, actions:[[[1,22],[-1,1],[-1,2]]]}, [1,2,"foo",{x:5}]);
+test({parent:root.context, actions:[[[1,9]]]}, [1,2,"foo",{x:5}]);
+test({parent:root.context, actions:[[[1,9],[-1,3],[-1,2]]]}, [1,2,"foo",{foo:5}]);
+test({parent:root.context, actions:[[[1,9],[-1,3],[-1,2]]]}, [1,2,"foo",{foo:5,x:7}]);
+test({parent:root.context, actions:[[[1,9],[-1,3],[-1,2]]]}, [1,2,"x",{foo:5,x:7}]);
+test({parent:root.context, actions:[[[1,9],[-1,3],[-1,2]]]}, [1,2,"xx",{foo:5,x:7}]);

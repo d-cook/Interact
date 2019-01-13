@@ -3,13 +3,8 @@ prim     :: string | number | bool | null
 
 key      :: number | string      <-- Array index or Object property
 lookup   :: [ number, key.. ]    <-- Distance up the context-chain (-1 for args), Path down into that context
-
-action   :: prim                 <-- Actual prim value
-            { string: action.. } <-- Object literal of actions
-            [ 0, action..      ] <-- Array literal of actions
-            [ 1, lookup..      ] <-- Function call (first lookup is the func, rest are the args)
-
-args     :: [ any..            ] <-- (Actual) Arguments passed into a context
+action   :: [ lookup.. ] | prim  <-- Function call (first lookup is the func, rest are args) or Single value
+args     :: [ any..    ]         <-- (Actual) Arguments passed into a context
 
 context  :: {                    <-- Execution context
    "parent" : context,
@@ -42,14 +37,16 @@ EXAMPLE: (x, y, z) --> { x: x*(d/(d+z)), y: y*(d/(d+z)) }
 
 Func: {
   name   : "to2D"
-  parent : { values: [<*>, </>, <+>] },  <-- Lookups: [ 1,..]
-  args   : ["x","y","z","d"],            <-- Lookups: [-1,..]
-  actions: [                             <-- Lookups: [ 0,..]
-    [1, [1,2], [-1,3], [-1,2]],      <-- d + z
-    [1, [1,1], [-1,3], [ 0,0]],      <-- d / (d+z)
-    [1, [1,0], [-1,0], [ 0,1]],      <-- x * (d/(d+z))
-    [1, [1,0], [-1,1], [ 0,1]],      <-- y * (d/(d+z))
-    [0, {x:[1,[0,2]], y:[1,[0,3]]}]  <-- { x: x*(d/(d+z)), y: y*(d/(d+z)) }
+  parent : { values: [<*>, </>, <+>, <array>, <object([k,v]..)>] },  <-- Lookups: [ 1,..]
+  args   : ["x","y","z","d"],                                        <-- Lookups: [-1,..]
+  actions: [                                                         <-- Lookups: [ 0,..]
+    [[1,3], [-1,4], [-1,3]],  <-- d + z
+    [[1,2], [-1,4], [ 0,1]],  <-- d / (d+z)
+    [[1,1], [-1,1], [ 0,2]],  <-- x * (d/(d+z))
+    [[1,1], [-1,2], [ 0,2]],  <-- y * (d/(d+z))
+    [[1,4], "x"   , [ 0,3]],  <-- ["x", x * (d/(d+z))]
+    [[1,4], "y"   , [ 0,4]],  <-- ["y", y * (d/(d+z))]
+    [[1,5], [ 0,6], [ 0,7]],  <-- { x: x*(d/(d+z)), y: y*(d/(d+z)) }
   ]
 }
 
@@ -60,6 +57,6 @@ ExampleCallToFunc: {
     2,                                      <-- y = 2
     1,                                      <-- z = 1
     9,                                      <-- d = 9
-    [1, [1,1], [0,0], [0,1], [0,2], [0,3]]  <-- Func(3,2,1,9)
+    [[1,1], [0,1], [0,2], [0,3], [0,4]]  <-- Func(3,2,1,9)
   ]
 }
