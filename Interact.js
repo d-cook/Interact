@@ -292,21 +292,6 @@ function getContent(value, meta, hoverPath, selectPath) {
 
 function refreshView() {
     view = createView(view.func, view.args, view.parent);
-    refreshMeta(view.context.values, view.func.meta);
-}
-
-function refreshMeta(value, meta) {
-    if (meta.children) {
-        var y = values(meta.children).reduce((h, m) => Math.max(h, m.y + m.h + spacing), meta.h);
-        keys(value).map((k, i) => {
-            var m = meta.children[k];
-            if (!m) {
-                m = meta.children[k] = createMeta(value[k], -1, spacing, y, i);
-                y = m.y + m.h + spacing;
-            }
-            refreshMeta(value[k], m);
-        });
-    }
 }
 
 function renderContent() {
