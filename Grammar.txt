@@ -1,32 +1,32 @@
 any     :: object | array | prim | native-function   <-- object can be a func
 prim    :: string | number | bool | null
 
-index   :: number | string    <-- Array index or Object property
-lookup  :: [number, index..]  <-- Distance up the context-chain (-1 for args), Indexes down into a context
+index   :: number | string      <-- Array index or Object property
+lookup  :: [ number, index.. ]  <-- Distance up the context-chain (-1 for args), Indexes down into a context
 
-calc    :: prim               <-- Actual prim value
-           { string: calc.. } <-- Object literal of calcs
-           [ 0, calc..      ] <-- Array literal of calcs
-           [ 1, lookup..    ] <-- Function call (first lookup is the func, rest are the args)
+action  :: prim                 <-- Actual prim value
+           { string: action.. } <-- Object literal of actions
+           [ 0, action..      ] <-- Array literal of actions
+           [ 1, lookup..      ] <-- Function call (first lookup is the func, rest are the args)
 
-args    :: [ any..          ] <-- (Actual) Arguments passed into a context
+args    :: [ any..            ] <-- (Actual) Arguments passed into a context
 
-context :: {                  <-- Execution context
+context :: {                    <-- Execution context
  "parent": context,
  "values": [ args, any.. ],
  "meta"  : [ {..}.. ]
 }
 
-func    :: {                  <-- User defined Function
- "name"  : string,
- "parent": context,
- "calcs" : [ calc.. ],
- "args"  : [ string.. ]
+func     :: {                   <-- User defined Function
+ "name"   : string,
+ "parent" : context,
+ "actions": [ action.. ],
+ "args"   : [ string.. ]
 }
 
 --------------------------------------------------------------------------------------
 
-NOTE: The args array is embedded in context-values so that it is assessible (as [0,0])
+NOTE: The args array is embedded in context-values so that it is accessible (as [0,0])
       This also means [-1,n] is a shorthand for [0,0,n] (both refering to argument n)
 
 --------------------------------------------------------------------------------------
@@ -34,10 +34,10 @@ NOTE: The args array is embedded in context-values so that it is assessible (as 
 EXAMPLE: (x, y, z) --> { x: x*(d/(d+z)), y: y*(d/(d+z)) }
 
 Func: {
-  name  : "to2D"
-  parent: { values: [<*>, </>, <+>] },  <-- Lookups: [ 1,..]
-  args  : ["x","y","z","d"],            <-- Lookups: [-1,..]
-  calcs : [                             <-- Lookups: [ 0,..]
+  name   : "to2D"
+  parent : { values: [<*>, </>, <+>] },  <-- Lookups: [ 1,..]
+  args   : ["x","y","z","d"],            <-- Lookups: [-1,..]
+  actions: [                             <-- Lookups: [ 0,..]
     [1, [1,2], [-1,3], [-1,2]],      <-- d + z
     [1, [1,1], [-1,3], [ 0,0]],      <-- d / (d+z)
     [1, [1,0], [-1,0], [ 0,1]],      <-- x * (d/(d+z))
@@ -47,8 +47,8 @@ Func: {
 }
 
 ExampleCallToFunc: {
-  parent: values: [[], Func],  <-- Lookups: [ 1,..] (Func is [1,1])
-  calcs : [                    <-- Lookups: [ 0,..]
+  parent : { values: [[], Func] } <-- Lookups: [ 1,..] (Func is [1,1])
+  actions: [                      <-- Lookups: [ 0,..]
     3,                                      <-- x = 3
     2,                                      <-- y = 2
     1,                                      <-- z = 1

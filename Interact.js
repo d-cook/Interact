@@ -78,7 +78,7 @@ function evalObject(context, objTemplate) {
     var obj = {};
     for (var i = 0; i < keys.length; i++) {
         var k = keys[i];
-        obj[k] = evalCalc(context, objTemplate[k]);
+        obj[k] = evalAction(context, objTemplate[k]);
     }
     return obj;
 }
@@ -94,13 +94,13 @@ function evalCall(context, entries) {
                                 : null;
 }
 
-function evalCalc(context, calc) {
-    var t = type(calc);
-    return (t === 'null'  ) ? null :
-           (t === 'object') ? evalObject(context, calc) :
-           (t !== 'array' ) ? calc :
-           (calc[0] !== 1 ) ? evalArray(context, calc.slice(1))
-                            : evalCall(context, calc.slice(1));
+function evalAction(context, action) {
+    var t = type(action);
+    return (t === 'null'   ) ? null :
+           (t === 'object' ) ? evalObject(context, action) :
+           (t !== 'array'  ) ? action :
+           (action[0] !== 1) ? evalArray(context, action.slice(1))
+                             : evalCall(context, action.slice(1));
 }
 
 function apply(func, args) {
@@ -109,8 +109,8 @@ function apply(func, args) {
     if (tf !== 'object') { return null; }
     var result = null;
     var context = { values:[args], parent:func.parent };
-    for (var i = 0; i < func.calcs.length; i++) {
-        result = evalCalc(context, func.calcs[i]);
+    for (var i = 0; i < func.actions.length; i++) {
+        result = evalAction(context, func.actions[i]);
         context.values.push(result);
     }
     return result;
@@ -173,7 +173,7 @@ function newContext(parent, values, args) {
 
 var root = newContext(null, [
     root, // root is undefined at this point, so it must be set again below
-    lookupValue, lookupContext, lookup, evalObject, evalArray, evalCall, evalCalc, apply,
+    lookupValue, lookupContext, lookup, evalObject, evalArray, evalCall, evalAction, apply,
     has, get, set, del, type, _if, and, or, newObj, keys, length, truthy, not,
     plus, minus, mult, div, mod, EQ, NE, LT, GT, LTE, GTE,
     slice, push, unshift, pop, shift, charAt, substring,
@@ -303,18 +303,18 @@ renderContent();
 
 function test(context, args) { console.log(apply(context, args)); }
 
-test({parent:root, calcs:[]}, [1,2,"foo",{x:5}]);
-test({parent:root, calcs:[5]}, [1,2,"foo",{x:5}]);
-test({parent:root, calcs:["test"]}, [1,2,"foo",{x:5}]);
-test({parent:root, calcs:[0,1,2,3]}, [1,2,"foo",{x:5}]);
-test({parent:root, calcs:[[0,1,2,3]]}, [1,2,"foo",{x:5}]);
-test({parent:root, calcs:[[1,[1,0]]]}, [1,2,"foo",{x:5}]);
-test({parent:root, calcs:[[1,[1,23]]]}, [1,2,"foo",{x:5}]);
-test({parent:root, calcs:[[1,[1,23],[-1,0],[-1,1]]]}, [1,2,"foo",{x:5}]);
-test({parent:root, calcs:[[1,[1,23],[0,0,0],[-1,1]]]}, [1,2,"foo",{x:5}]);
-test({parent:root, calcs:[[1,[1,23],[-1,1],[-1,2]]]}, [1,2,"foo",{x:5}]);
-test({parent:root, calcs:[[1,[1,11]]]}, [1,2,"foo",{x:5}]);
-test({parent:root, calcs:[[1,[1,11],[-1,3],[-1,2]]]}, [1,2,"foo",{foo:5}]);
-test({parent:root, calcs:[[1,[1,11],[-1,3],[-1,2]]]}, [1,2,"foo",{foo:5,x:7}]);
-test({parent:root, calcs:[[1,[1,11],[-1,3],[-1,2]]]}, [1,2,"x",{foo:5,x:7}]);
-test({parent:root, calcs:[[1,[1,11],[-1,3],[-1,2]]]}, [1,2,"xx",{foo:5,x:7}]);
+test({parent:root, actions:[]}, [1,2,"foo",{x:5}]);
+test({parent:root, actions:[5]}, [1,2,"foo",{x:5}]);
+test({parent:root, actions:["test"]}, [1,2,"foo",{x:5}]);
+test({parent:root, actions:[0,1,2,3]}, [1,2,"foo",{x:5}]);
+test({parent:root, actions:[[0,1,2,3]]}, [1,2,"foo",{x:5}]);
+test({parent:root, actions:[[1,[1,0]]]}, [1,2,"foo",{x:5}]);
+test({parent:root, actions:[[1,[1,23]]]}, [1,2,"foo",{x:5}]);
+test({parent:root, actions:[[1,[1,23],[-1,0],[-1,1]]]}, [1,2,"foo",{x:5}]);
+test({parent:root, actions:[[1,[1,23],[0,0,0],[-1,1]]]}, [1,2,"foo",{x:5}]);
+test({parent:root, actions:[[1,[1,23],[-1,1],[-1,2]]]}, [1,2,"foo",{x:5}]);
+test({parent:root, actions:[[1,[1,11]]]}, [1,2,"foo",{x:5}]);
+test({parent:root, actions:[[1,[1,11],[-1,3],[-1,2]]]}, [1,2,"foo",{foo:5}]);
+test({parent:root, actions:[[1,[1,11],[-1,3],[-1,2]]]}, [1,2,"foo",{foo:5,x:7}]);
+test({parent:root, actions:[[1,[1,11],[-1,3],[-1,2]]]}, [1,2,"x",{foo:5,x:7}]);
+test({parent:root, actions:[[1,[1,11],[-1,3],[-1,2]]]}, [1,2,"xx",{foo:5,x:7}]);
