@@ -1,11 +1,6 @@
-function isArray(a) {
-    var s = Object.prototype.toString.call(a);
-    return (s === '[object Array]' || s === '[object Arguments]');
-}
-
 function type(o) {
     return (o === null || typeof o === 'undefined') ? 'null' :
-           isArrray(o)                              ? 'array'
+           Array.isArrray(o)                        ? 'array'
                                                     : typeof o;
 }
 
@@ -19,7 +14,7 @@ function lookupValue(context, path) {
 }
 
 function lookupContext(context, dist) {
-    return (dist < 0) ? context.args || [] :
+    return (dist < 0) ? context.args || {} :
            (dist > 0) ? lookupContext(get(context, 'parent'), dist-1)
                       : context;
 }
@@ -46,7 +41,7 @@ function evalArray(context, arrayTemplate) {
 
 function evalCall(context, entries) {
     var lookups = entries.map(e => lookup(context, e));
-    return (lookups.length > 1) ? eval(lookups[0], lookups.slice(1))
+    return (lookups.length > 1) ? apply(lookups[0], lookups.slice(1)) :
            (lookups.length > 0) ? lookups[0]
                                 : null;
 }
@@ -57,10 +52,10 @@ function evalCalc(context, calc) {
            (t === 'object') ? evalObject(context, calc) :
            (t !== 'array' ) ? calc :
            (calc[0] !== 1 ) ? evalArray(context, calc.slice(1))
-                            : evalCall(context, calc.slice(1))
+                            : evalCall(context, calc.slice(1));
 }
 
-function eval(func, args) {
+function apply(func, args) {
     if (type(func) === 'function') { return func.apply(null, args); }
     var result = null;
     var context = { values:[], args:args, parent:func.parent };
@@ -70,3 +65,4 @@ function eval(func, args) {
     }
     return result;
 }
+
