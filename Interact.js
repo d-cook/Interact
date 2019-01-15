@@ -21,15 +21,13 @@ function _if (cond, T, F) {
 
 function and (L, R) {
     if (arguments.length < 2 || not(L)) { return L; }
-    var args = [apply(R, [])];
-    args.push.apply(args, slice(arguments, 2));
+    var args = [apply(R, [])].concat([].slice.call(arguments, 2));
     return and.apply(null, args);
 }
 
 function or (L, R) {
     if (arguments.length < 2 || truthy(L)) { return L; }
-    var args = [apply(R, [])];
-    args.push.apply(args, slice(arguments, 2));
+    var args = [apply(R, [])].concat([].slice.call(arguments, 2));
     return or.apply(null, args);
 }
 
@@ -39,19 +37,19 @@ function length (o) { return(Object.keys(o||{}) || []).length; }
 function truthy (v) { return v || v === 0 || v === ''; }
 function not    (v) { return !truthy(v); }
 
-function plus () { var r = arguments[0]; for(var i=1; i<arguments.length; i++) {       r +=      arguments[i];                 } return r;    }
-function minus() { var r = arguments[0]; for(var i=1; i<arguments.length; i++) {       r -=      arguments[i];                 } return r;    }
-function mult () { var r = arguments[0]; for(var i=1; i<arguments.length; i++) {       r *=      arguments[i];                 } return r;    }
-function div  () { var r = arguments[0]; for(var i=1; i<arguments.length; i++) {       r /=      arguments[i];                 } return r;    }
-function mod  () { var r = arguments[0]; for(var i=1; i<arguments.length; i++) {       r %=      arguments[i];                 } return r;    }
-function EQ   () { var r = arguments[0]; for(var i=1; i<arguments.length; i++) { if (!(r ===(    arguments[i]))) return false; } return true; }
-function NE   () { var r = arguments[0]; for(var i=1; i<arguments.length; i++) { if (!(r !==(    arguments[i]))) return false; } return true; }
-function LT   () { var r = arguments[0]; for(var i=1; i<arguments.length; i++) { if (!(r <  (r = arguments[i]))) return false; } return true; }
-function GT   () { var r = arguments[0]; for(var i=1; i<arguments.length; i++) { if (!(r >  (r = arguments[i]))) return false; } return true; }
-function LTE  () { var r = arguments[0]; for(var i=1; i<arguments.length; i++) { if (!(r <= (r = arguments[i]))) return false; } return true; }
-function GTE  () { var r = arguments[0]; for(var i=1; i<arguments.length; i++) { if (!(r >= (r = arguments[i]))) return false; } return true; }
+function plus (x) { return reduce([].slice.call(arguments, 1), (r,v) => r + v, x); }
+function minus(x) { return reduce([].slice.call(arguments, 1), (r,v) => r - v, x); }
+function mult (x) { return reduce([].slice.call(arguments, 1), (r,v) => r * v, x); }
+function div  (x) { return reduce([].slice.call(arguments, 1), (r,v) => r / v, x); }
+function mod  (x) { return reduce([].slice.call(arguments, 1), (r,v) => r % v, x); }
+function EQ   (x) { return reduce([].slice.call(arguments, 1), (r,v) => r && (v === x), true); }
+function NE   (x) { return reduce([].slice.call(arguments, 1), (r,v) => r && (v !== x), true); }
+function LT   (x) { return reduce([].slice.call(arguments, 1), (r,v) => r && (v <   x), true); }
+function GT   (x) { return reduce([].slice.call(arguments, 1), (r,v) => r && (v >   x), true); }
+function LTE  (x) { return reduce([].slice.call(arguments, 1), (r,v) => r && (v <=  x), true); }
+function GTE  (x) { return reduce([].slice.call(arguments, 1), (r,v) => r && (v >=  x), true); }
 
-function array () { return [].slice.apply(arguments); }
+function array () { return [].slice.call(arguments); }
 function object(keys, values) {
     var obj = Object.create(null);
     if (type(keys) === 'array' && type(values) === 'array') {
@@ -60,6 +58,9 @@ function object(keys, values) {
     return obj;
 }
 
+function map    (a,f  ) { return (type(a) !== 'array') ? null : [].map    .apply(a, [].slice.call(arguments, 1)); }
+function filter (a,f  ) { return (type(a) !== 'array') ? null : [].filter .apply(a, [].slice.call(arguments, 1)); }
+function reduce (a,f,i) { return (type(a) !== 'array') ? null : [].reduce .apply(a, [].slice.call(arguments, 1)); }
 function slice  (a,b,e) { return (type(a) !== 'array') ? null : [].slice  .apply(a, [].slice.call(arguments, 1)); }
 function push   (a    ) { return (type(a) !== 'array') ? null : [].push   .apply(a, [].slice.call(arguments, 1)); }
 function unshift(a    ) { return (type(a) !== 'array') ? null : [].unshift.apply(a, [].slice.call(arguments, 1)); }
