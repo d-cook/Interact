@@ -213,7 +213,6 @@ function refreshMeta(value, meta, levels) {
         meta.state = 'collapsed';
     } else {
         var ch = meta.children || [];
-        var w = spacing;
         var h = values(ch).reduce((h, m) => Math.max(h, m.y + m.h + spacing), spacing);
         var ks = keys(value);
         var vals = ks.map((k, i) => {
@@ -227,12 +226,11 @@ function refreshMeta(value, meta, levels) {
                 (levels - 1)
             );
             if (!ch[k]) { h = m.y + m.h + spacing; }
-            w = Math.max(w, m.x + m.w + spacing);
             return m;
         });
         meta.children = (t === 'array') ? vals : object(ks, vals);
-        meta.w = w;
-        meta.h = h;
+        meta.w = vals.reduce((w, m) => Math.max(w, m.x + m.w + spacing), spacing);
+        meta.h = vals.reduce((h, m) => Math.max(h, m.y + m.h + spacing), spacing);
         meta.state = 'expanded';
     }
     return meta;
