@@ -380,6 +380,16 @@ function extractSelectedItem() {
     }
 }
 
+function expandSelectedItem() {
+    if (selectedItem.length > 1) {
+        var meta = selectedItem.reduce((m, s) => m.children[s], view.func.meta);
+        if (meta.state === 'collapsed') {meta.state = 'expanded'; }
+        else if (meta.state === 'expanded') { meta.state = 'collapsed'; }
+        bringToFront(view.func.meta.children, selectedItem);
+        refreshView();
+    }
+}
+
 function moveSelectedItem(dx, dy) {
     if (selectedItem.length > 0) {
         var m = selectedItem.reduce((m, s) => m.children[s], view.func.meta);
@@ -419,6 +429,7 @@ ui.onMouseClick(function onMouseClick(x, y, clicks) {
         extractSelectedItem();
     } else {
         // Single-Click
+        expandSelectedItem();
     }
     renderContent();
 }, 285);
