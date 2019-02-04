@@ -229,6 +229,10 @@ function refreshMeta(value, meta, levels) {
             return m;
         });
         meta.children = (t === 'array') ? vals : object(ks, vals);
+        var x = vals.reduce((x, m) => Math.min(x, m.x - spacing), Infinity);
+        var y = vals.reduce((y, m) => Math.min(y, m.y - spacing), Infinity);
+        if (x !== Infinity) { vals.map(m => m.x -= x); meta.x += x; }
+        if (y !== Infinity) { vals.map(m => m.y -= y); meta.y += y; }
         meta.w = vals.reduce((w, m) => Math.max(w, m.x + m.w + spacing), spacing);
         meta.h = vals.reduce((h, m) => Math.max(h, m.y + m.h + spacing), spacing);
         meta.state = 'expanded';
@@ -393,6 +397,7 @@ function moveSelectedItem(dx, dy) {
         var m = selectedItem.reduce((m, s) => m.children[s], view.func.meta);
         m.x += dx;
         m.y += dy;
+        refreshView();
     }
 }
 
