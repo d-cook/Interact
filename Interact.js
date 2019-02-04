@@ -301,6 +301,10 @@ function getContent(value, meta, hoverPath, selectPath) {
 
 function refreshView() {
     view = createView(view.func, view.args, view.parent);
+    var w = view.func.meta.w; // Keep width set by window
+    var h = view.func.meta.h; // Keep height set by window
+    var meta = refreshMeta(view.context.values, view.func.meta);
+    view.func.meta = Object.assign(meta, { w: w, h: h });
 }
 
 function renderContent() {
