@@ -1,4 +1,4 @@
-// Paste "Renderer 1.1.0" code HERE ( https://github.com/d-cook/Render/releases/tag/1.1.0 )
+// Paste "Renderer 1.1.1" code HERE ( https://github.com/d-cook/Render/releases/tag/1.1.1 )
 
 // ------------------------
 // ---- BASE FUNCTIONS ----
