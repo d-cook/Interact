@@ -186,7 +186,7 @@ var view = createView({
 
 function createView(func, args, parent) {
     var context = applyContext(func, args);
-    if (!func.meta) { func.meta = createMeta(context.values, 1); }
+    if (!func.meta) { func.meta = refreshMeta(context.values, null, 2); }
     return {
         func   : func,
         context: context,
@@ -195,9 +195,10 @@ function createView(func, args, parent) {
     };
 }
 
-function createMeta(value, levels, x, y, z) {
+function refreshMeta(value, meta, levels) {
+    if (type(levels) !== 'number') { levels = 1; }
     var t = type(value);
-    var meta = { x:(x||0), y:(y||0), z:(z||0) };
+    meta = Object.assign({ x: 0, y: 0, z: 0 }, meta || {});
     if (t !== 'object' && t !== 'array') {
         var str = stringOf(value);
         meta.w = (t === 'string')
@@ -206,20 +207,27 @@ function createMeta(value, levels, x, y, z) {
         meta.h = (t === 'string')
            ? textSize * str.split('\n').length
            : textSize;
-        return meta;
-    } else if (levels < 0) {
+    } else if (meta.state === 'collapsed' || (!meta.state && levels < 1)) {
         meta.w = 16;
         meta.h = textSize;
         meta.state = 'collapsed';
     } else {
-        var h = spacing;
+        var ch = meta.children || [];
         var w = spacing;
+        var h = values(ch).reduce((h, m) => Math.max(h, m.y + m.h + spacing), spacing);
         var ks = keys(value);
         var vals = ks.map((k, i) => {
-            var x = spacing + (t !== 'object' ? 0 : ui.textWidth(k+' : '));
-            var m = createMeta(value[k], (levels || 0) - 1, x, h, i);
+            var m = refreshMeta(
+                value[k],
+                ch[k] || {
+                    x: spacing + (t !== 'object' ? 0 : ui.textWidth(k+' : ')),
+                    y: h,
+                    z: i
+                },
+                (levels - 1)
+            );
+            if (!ch[k]) { h = m.y + m.h + spacing; }
             w = Math.max(w, m.x + m.w + spacing);
-            h += m.h + spacing;
             return m;
         });
         meta.children = (t === 'array') ? vals : object(ks, vals);
@@ -232,7 +240,7 @@ function createMeta(value, levels, x, y, z) {
 
 function subMeta(meta, key) {
     var m = (meta.children && meta.children[key]);
-    m = (m) ? Object.assign({}, m) : createMeta(null);
+    m = (m) ? Object.assign({}, m) : refreshMeta(null);
     m.x += meta.x;
     m.y += meta.y;
     return m;
@@ -357,10 +365,10 @@ function extractSelectedItem() {
         var idx = getActionIndex(action) + 1;
         if (idx < 1) {
             idx = view.func.actions.length + 1;
-            var item = selectedItem.reduce((v, h) => v[h], view.context.values);
+            var item = selectedItem.reduce((v, s) => v[s], view.context.values);
             var outerMeta = view.func.meta.children[selectedItem[0]];
-            var innerMeta = selectedItem.reduce((m, h) => subMeta(m, h), view.func.meta);
-            addAction(action, createMeta(item, 0, outerMeta.x + outerMeta.w + spacing, innerMeta.y));
+            var innerMeta = selectedItem.reduce((m, s) => subMeta(m, s), view.func.meta);
+            addAction(action, refreshMeta(item, { x: outerMeta.x + outerMeta.w + spacing, y: innerMeta.y }));
             refreshView();
         }
         selectedItem = [idx];
