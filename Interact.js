@@ -417,7 +417,7 @@ ui.onMouseClick(function onMouseClick(x, y, clicks) {
         // Single-Click
     }
     renderContent();
-}, 350);
+}, 285);
 
 ui.fitToWindow(function onResize(w, h) {
     view.func.meta.w = w;
