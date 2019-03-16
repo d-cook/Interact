@@ -1,5 +1,40 @@
 // Paste "Renderer 1.1.1" code HERE ( https://github.com/d-cook/Render/releases/tag/1.1.1 )
 
+// ----------------------
+// ---- Console Info ----
+// ----------------------
+
+console.log("                                                                             ");
+console.log("       .--------------------------------------\--\----------------------------.");
+console.log("      /  .-----. .-.  .-. .-----. .-----. .--\--\.  .-----. .-----. .-----.  / ");
+console.log("     /  '-. .-' /  | / / '-. .-' / .---' / .\-.\ / / .-. / / .---' '-. .-'  /  ");
+console.log("    /    / /   / / |/ /   / /   / '---. / '\-'\_/ / '-' / / /       / /    /   ");
+console.log("   /    / /   / /| / /   / /   / .---' / /\\ \\  / .-. / / /       / /    /    ");
+console.log("  /  .-' '-. / / |  /   / /   / '---. / /\ /\ / / / / / / '---.   / /    /     ");
+console.log(" /  '-----' '-'  '-'   '-'   '-----' '-'\ '\-' '-' '-' '-----'   '-'    /      ");
+console.log("'--------------------------------------\--\----------------------------'       ");
+console.log("                                                                             ");
+console.log(' [Click]      Expand/Collapse item                                           ');
+console.log(' [Dbl-Click]  Extract nested item                                            ');
+console.log(' [Drag]       Move item                                                      ');
+console.log('                                                                             ');
+console.log(' [???]        Auto Cleanup (remove unused items)                             ');
+console.log(' [???]        Delete item (remove/undo its "action")                         ');
+console.log(' [???]        Auto Layout item contents                                      ');
+console.log(' [???]        Edit item (opens a new "view")                                 ');
+console.log(' [???]        Insert new item                                                ');
+console.log('                                                                             ');
+
+// TODO:
+// #3 How to construct values?
+//    - Type values into existence
+//    - function invocations (drag -> template -> go!)
+// #9 Visualize external/parent entites
+//    - List parent values (tray, or as "inner" but marked). Or context values, which contains parent
+//    - Show referenced external values
+// #30 Multiple views
+// #31 Views are editors
+
 // ------------------------
 // ---- BASE FUNCTIONS ----
 // ------------------------
@@ -125,19 +160,6 @@ function applyContext(func, args) {
 // -----------------------------
 // ---- TOOL IMPLEMENTATION ----
 // -----------------------------
-
-// TODO: Assign mouse/keyboard actions:
-//   [Click]      Expand/Collapse nested items
-//   [Dbl-Click]  Copy inner item out of container
-//   [DELETE]     Delete selected item (and associated action)
-//   [DRAG]       Drag container
-//   [DragHandle] Resize selected container (handles appear on selected)
-//                Scroll container view
-//                Auto-size container (to fit contents)
-//                Auto-layout container contents (with recursive auto-size?)
-//   [Just type]  Edit values (a caret appears?) (as an action!)
-//   [Just type]  Create new values at point of last click in selected item
-//                Add arguments to a function (currying?) / create call-template from function
 
 // Settings
 var textSize = 14; // text height
@@ -449,6 +471,10 @@ ui.fitToWindow(function onResize(w, h) {
 
 function test(context, args) { console.log(apply(context, args)); }
 
+console.log("----------------");
+console.log("Running tests...");
+console.log("----------------");
+
 test({parent:root.context, actions:[]}, [1,2,"foo",{x:5}]);
 test({parent:root.context, actions:[5]}, [1,2,"foo",{x:5}]);
 test({parent:root.context, actions:["test"]}, [1,2,"foo",{x:5}]);
@@ -468,3 +494,7 @@ test({parent:root.context, actions:[[5],[x=>x, [0]]]}, [1,2,"foo",{x:5}]);
 test({parent:root.context, actions:[[5],[x=>x, [0,1]]]}, [1,2,"foo",{x:5}]);
 test({parent:root.context, actions:[[5],[x=>x, [0,"values"]]]}, [1,2,"foo",{x:5}]);
 test({parent:root.context, actions:[[5],[x=>x, [0,"parent"]]]}, [1,2,"foo",{x:5}]);
+
+console.log("------------");
+console.log("End of tests");
+console.log("------------");
