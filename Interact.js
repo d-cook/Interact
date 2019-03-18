@@ -208,7 +208,10 @@ var view = createView({
 
 function createView(func, args, parent) {
     var context = applyContext(func, args);
-    if (!func.meta) { func.meta = refreshMeta(context.values, null, 2); }
+    if (!func.meta) {
+        var meta = refreshMeta(context.values, null, 2);
+        func.meta = Object.assign(meta, { x: 0, y: 0, autoSize: false });
+    }
     return {
         func   : func,
         context: context,
@@ -220,7 +223,7 @@ function createView(func, args, parent) {
 function refreshMeta(value, meta, levels) {
     if (type(levels) !== 'number') { levels = 1; }
     var t = type(value);
-    meta = Object.assign({ x: 0, y: 0, z: 0 }, meta || {});
+    meta = Object.assign({ x: 0, y: 0, z: 0, autoSize: true }, meta || {});
     if (t !== 'object' && t !== 'array') {
         var str = stringOf(value);
         meta.w = (t === 'string')
@@ -251,12 +254,14 @@ function refreshMeta(value, meta, levels) {
             return m;
         });
         meta.children = (t === 'array') ? vals : object(ks, vals);
-        var x = vals.reduce((x, m) => Math.min(x, m.x - spacing), Infinity);
-        var y = vals.reduce((y, m) => Math.min(y, m.y - spacing), Infinity);
-        if (x !== Infinity) { vals.map(m => m.x -= x); meta.x += x; }
-        if (y !== Infinity) { vals.map(m => m.y -= y); meta.y += y; }
-        meta.w = vals.reduce((w, m) => Math.max(w, m.x + m.w + spacing), spacing);
-        meta.h = vals.reduce((h, m) => Math.max(h, m.y + m.h + spacing), spacing);
+        if (meta.autoSize) {
+            var x = vals.reduce((x, m) => Math.min(x, m.x - spacing), Infinity);
+            var y = vals.reduce((y, m) => Math.min(y, m.y - spacing), Infinity);
+            if (x !== Infinity) { vals.map(m => m.x -= x); meta.x += x; }
+            if (y !== Infinity) { vals.map(m => m.y -= y); meta.y += y; }
+            meta.w = vals.reduce((w, m) => Math.max(w, m.x + m.w + spacing), spacing);
+            meta.h = vals.reduce((h, m) => Math.max(h, m.y + m.h + spacing), spacing);
+        }
         meta.state = 'expanded';
     }
     return meta;
