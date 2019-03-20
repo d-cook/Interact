@@ -41,8 +41,8 @@ console.log('                                                                   
 
 function has (o, p   ) { try { return Object.prototype.hasOwnProperty.call(o, p); } catch(e) { return false; } }
 function get (o, p   ) { return has(o, p) ? o[p] : null; }
-function set (o, p, v) { var t = type(o); if (t === 'object' || t === 'array') { o[p] = v; } return v; }
-function del (o, p   ) { var v = (has(o, p) ? o[p] : null); delete o[p]; return v; }
+function set (o, p, v) { let t = type(o); if (t === 'object' || t === 'array') { o[p] = v; } return v; }
+function del (o, p   ) { let v = (has(o, p) ? o[p] : null); delete o[p]; return v; }
 
 function type(o) {
     return (o === null || typeof o === 'undefined') ? 'null' :
@@ -50,21 +50,9 @@ function type(o) {
                                                     : typeof o;
 }
 
-function _if (cond, T, F) {
-    return apply(truthy(cond) ? T : F, [cond]);
-}
-
-function and (L, R) {
-    if (arguments.length < 2 || not(L)) { return L; }
-    var args = [apply(R, [])].concat([].slice.call(arguments, 2));
-    return and.apply(null, args);
-}
-
-function or (L, R) {
-    if (arguments.length < 2 || truthy(L)) { return L; }
-    var args = [apply(R, [])].concat([].slice.call(arguments, 2));
-    return or.apply(null, args);
-}
+function _if (cond, T, F   ) { return apply(truthy(cond) ? T : F, [cond]); }
+function and (L, R, ...rest) { return (arguments.length < 2 || not   (L)) ? L : and(apply(R, []), ...rest); }
+function or  (L, R, ...rest) { return (arguments.length < 2 || truthy(L)) ? L : or (apply(R, []), ...rest); }
 
 function keys   (o) { return (type(o) === 'array') ? o.map((v, i) => i) : Object.keys(o||{}) || []; }
 function values (o) { return keys(o).map((k, v) => o[k]); }
@@ -72,38 +60,37 @@ function length (o) { return(Object.keys(o||{}) || []).length; }
 function truthy (v) { return v || v === 0 || v === ''; }
 function not    (v) { return !truthy(v); }
 
-function plus (x) { return reduce([].slice.call(arguments, 1), (r,v) => r + v, x); }
-function minus(x) { return reduce([].slice.call(arguments, 1), (r,v) => r - v, x); }
-function mult (x) { return reduce([].slice.call(arguments, 1), (r,v) => r * v, x); }
-function div  (x) { return reduce([].slice.call(arguments, 1), (r,v) => r / v, x); }
-function mod  (x) { return reduce([].slice.call(arguments, 1), (r,v) => r % v, x); }
-function EQ   (x) { return reduce([].slice.call(arguments, 1), (r,v) => r && (v === x), true); }
-function NE   (x) { return reduce([].slice.call(arguments, 1), (r,v) => r && (v !== x), true); }
-function LT   (x) { return reduce([].slice.call(arguments, 1), (r,v) => r && (v <   x), true); }
-function GT   (x) { return reduce([].slice.call(arguments, 1), (r,v) => r && (v >   x), true); }
-function LTE  (x) { return reduce([].slice.call(arguments, 1), (r,v) => r && (v <=  x), true); }
-function GTE  (x) { return reduce([].slice.call(arguments, 1), (r,v) => r && (v >=  x), true); }
+function plus (x, ...rest) { return reduce(rest, (r,v) => r + v, x); }
+function minus(x, ...rest) { return reduce(rest, (r,v) => r - v, x); }
+function mult (x, ...rest) { return reduce(rest, (r,v) => r * v, x); }
+function div  (x, ...rest) { return reduce(rest, (r,v) => r / v, x); }
+function mod  (x, ...rest) { return reduce(rest, (r,v) => r % v, x); }
+function EQ   (x, ...rest) { return reduce(rest, (r,v) => r && (v === x), true); }
+function NE   (x, ...rest) { return reduce(rest, (r,v) => r && (v !== x), true); }
+function LT   (x, ...rest) { return reduce(rest, (r,v) => r && (v <   x), true); }
+function GT   (x, ...rest) { return reduce(rest, (r,v) => r && (v >   x), true); }
+function LTE  (x, ...rest) { return reduce(rest, (r,v) => r && (v <=  x), true); }
+function GTE  (x, ...rest) { return reduce(rest, (r,v) => r && (v >=  x), true); }
 
-function array () { return [].slice.call(arguments); }
+function array (...args) { return args; }
 function object(keys, values) {
-    var obj = Object.create(null);
+    let obj = Object.create(null);
     if (type(keys) === 'array' && type(values) === 'array') {
         keys.map((k, i) => obj[''+k] = values[i]);
     }
     return obj;
 }
 
-function map    (a,f  ) { return (type(a) !== 'array') ? null : [].map    .apply(a, [].slice.call(arguments, 1)); }
-function filter (a,f  ) { return (type(a) !== 'array') ? null : [].filter .apply(a, [].slice.call(arguments, 1)); }
-function reduce (a,f,i) { return (type(a) !== 'array') ? null : [].reduce .apply(a, [].slice.call(arguments, 1)); }
-function slice  (a,b,e) { return (type(a) !== 'array') ? null : [].slice  .apply(a, [].slice.call(arguments, 1)); }
-function push   (a    ) { return (type(a) !== 'array') ? null : [].push   .apply(a, [].slice.call(arguments, 1)); }
-function unshift(a    ) { return (type(a) !== 'array') ? null : [].unshift.apply(a, [].slice.call(arguments, 1)); }
-function pop    (a    ) { return (type(a) !== 'array') ? null : [].pop    .apply(a); }
-function shift  (a    ) { return (type(a) !== 'array') ? null : [].shift  .apply(a); }
-
-function charAt    (s,i  ) { return (type(s) !== 'string') ? null : s.charAt   (i   ); }
-function substring (s,b,e) { return (type(s) !== 'string') ? null : s.substring(b, e); }
+function map      (a, ...rest) { return (type(a) !== 'array' ) ? null : a.map      (...rest); }
+function filter   (a, ...rest) { return (type(a) !== 'array' ) ? null : a.filter   (...rest); }
+function reduce   (a, ...rest) { return (type(a) !== 'array' ) ? null : a.reduce   (...rest); }
+function slice    (a, ...rest) { return (type(a) !== 'array' ) ? null : a.slice    (...rest); }
+function push     (a, ...rest) { return (type(a) !== 'array' ) ? null : a.push     (...rest); }
+function unshift  (a, ...rest) { return (type(a) !== 'array' ) ? null : a.unshift  (...rest); }
+function pop      (a, ...rest) { return (type(a) !== 'array' ) ? null : a.pop      (...rest); }
+function shift    (a, ...rest) { return (type(a) !== 'array' ) ? null : a.shift    (...rest); }
+function charAt   (s, ...rest) { return (type(s) !== 'string') ? null : s.charAt   (...rest); }
+function substring(s, ...rest) { return (type(s) !== 'string') ? null : s.substring(...rest); }
 
 function _id(x) { return x; }
 
@@ -380,7 +367,7 @@ function getItemAt(metas, x, y) {
     var k = getKeyAt(metas, x, y);
     var m = metas[k];
     return (k === null) ? [] :
-           (m.children) ? [k].concat(getItemAt(m.children, x - m.x, y - m.y))
+           (m.children) ? [k, ...getItemAt(m.children, x - m.x, y - m.y)]
                         : [k];
 }
 
@@ -394,7 +381,7 @@ function selectHoveredItem() {
 function extractSelectedItem() {
     if (selectedItem.length > 1) {
         var last = selectedItem.length - 1;
-        var action = [[1, 9], [0].concat(selectedItem.slice(0, last)), selectedItem[last]];
+        var action = [[1, 9], [0, ...selectedItem.slice(0, last)], selectedItem[last]];
         var idx = getActionIndex(action) + 1;
         if (idx < 1) {
             idx = view.func.actions.length + 1;
