@@ -39,6 +39,8 @@ console.log('                                                                   
 // ---- BASE FUNCTIONS ----
 // ------------------------
 
+function _id(x) { return x; }
+
 function has (o, p   ) { try { return Object.prototype.hasOwnProperty.call(o, p); } catch(e) { return false; } }
 function get (o, p   ) { return has(o, p) ? o[p] : null; }
 function set (o, p, v) { let t = type(o); if (t === 'object' || t === 'array') { o[p] = v; } return v; }
@@ -91,8 +93,6 @@ function pop      (a, ...rest) { return (type(a) !== 'array' ) ? null : a.pop   
 function shift    (a, ...rest) { return (type(a) !== 'array' ) ? null : a.shift    (...rest); }
 function charAt   (s, ...rest) { return (type(s) !== 'string') ? null : s.charAt   (...rest); }
 function substring(s, ...rest) { return (type(s) !== 'string') ? null : s.substring(...rest); }
-
-function _id(x) { return x; }
 
 // -----------------------------
 // ---- EVAL IMPLEMENTATION ----
@@ -160,39 +160,46 @@ var selectedItem = [];
 // UI Renderer
 var ui = Renderer('top left', { size: textSize, baseline: 'top' });
 
+var rootFunc = {
+    parent : null,
+    args   : [],
+    actions: [
+        _id, lookupValue, lookupContext, lookup, evalCall, evalAction, apply,
+        has, get, set, del, type, _if, and, or, array, object, keys, length, truthy, not,
+        plus, minus, mult, div, mod, EQ, NE, LT, GT, LTE, GTE,
+        slice, push, unshift, pop, shift, charAt, substring
+        //rootFunc is inserted HERE
+        //innerFunc is inserted HERE
+    ]
+};
+var innerFunc = {
+    parent : null, //root.context inserted HERE
+    args   : ['param1', 'param2'],
+    actions: [
+        123,
+        "ab\tc\td\nefg\nhij\rklm\r\nnop",
+        true,
+        null,
+        [[1, 16], "x", "y", "z"],
+        [[1, 16], "(1,\n2,\n3)", [0], 2234],
+        function foo(x,y){return x+y/10;},
+        [[1, 17], [0,5], [0,6]],
+        function(){},
+        [[1]]
+    ]
+};
+
+rootFunc.actions.push(rootFunc);
+rootFunc.actions.push(innerFunc);
+
 // Root view
-var root = createView({
-        parent : null,
-        args   : [],
-        actions: [
-            null, // Reassigned to the root context below
-            lookupValue, lookupContext, lookup, evalCall, evalAction, apply,
-            has, get, set, del, type, _if, and, or, array, object, keys, length, truthy, not,
-            plus, minus, mult, div, mod, EQ, NE, LT, GT, LTE, GTE,
-            slice, push, unshift, pop, shift, charAt, substring, _id
-        ]
-    }, [], null);
-    root.context.values[1] = root.context; // Because it was undefined the first time
+var root = createView(rootFunc, []);
 
 // Active view
-var view = createView({
-        parent : root.context,
-        args   : ['param1', 'param2'],
-        actions: [
-            123,
-            "ab\tc\td\nefg\nhij\rklm\r\nnop",
-            true,
-            null,
-            [[1, 16], "x", "y", "z"],
-            [[1, 16], "(1,\n2,\n3)", [0], 2234],
-            function foo(x,y){return x+y/10;},
-            [[1, 17], [0,5], [0,6]],
-            function(){},
-            [[1]]
-        ]
-    }, ['arg1', 'arg2'], root);
+innerFunc.parent = root.context;
+var view = createView(innerFunc, ['arg1', 'arg2']);
 
-function createView(func, args, parent) {
+function createView(func, args) {
     var context = applyContext(func, args);
     if (!func.meta) {
         var meta = refreshMeta(context.values, null, 2);
@@ -201,7 +208,6 @@ function createView(func, args, parent) {
     return {
         func   : func,
         context: context,
-        parent : parent,
         args   : args
     };
 }
@@ -315,7 +321,7 @@ function getContent(value, meta, hoverPath, selectPath) {
 }
 
 function refreshView() {
-    view = createView(view.func, view.args, view.parent);
+    view = createView(view.func, view.args);
     var w = view.func.meta.w; // Keep width set by window
     var h = view.func.meta.h; // Keep height set by window
     var meta = refreshMeta(view.context.values, view.func.meta);

@@ -20,9 +20,8 @@ func     :: {                    <-- User defined Function
 }
 
 view     :: {                    <-- Editor view
-   "func"   : func
-   "context": context
-   "parent" : view
+   "func"   : func,
+   "context": context,
    "args"   : [ any.. ]
 }
 
