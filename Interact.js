@@ -185,11 +185,10 @@ var view = createView({
             null,
             [[1, 16], "x", "y", "z"],
             [[1, 16], "(1,\n2,\n3)", [0], 2234],
-            [[1, 16], 3, 4],
-            [[1, 16], 1, 2, [0,6], {}, 'A', 'B', function foo(x,y){return x+y/10;}],
+            function foo(x,y){return x+y/10;},
             [[1, 17], [0,5], [0,6]],
-            "foo",
-            function(){}
+            function(){},
+            [[1]]
         ]
     }, ['arg1', 'arg2'], root);
 
