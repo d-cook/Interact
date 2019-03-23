@@ -232,11 +232,12 @@ function refreshMeta(value, meta, levels) {
         var ch = meta.children || [];
         var h = values(ch).reduce((h, m) => Math.max(h, m.y + m.h + spacing), spacing);
         var ks = keys(value);
+        var tw = ks.map(t === 'array' ? k => 0 : k => ui.textWidth(k+' : '));
         var vals = ks.map((k, i) => {
             var m = refreshMeta(
                 value[k],
                 ch[k] || {
-                    x: spacing + (t !== 'object' ? 0 : ui.textWidth(k+' : ')),
+                    x: spacing + tw[i],
                     y: h,
                     z: i
                 },
@@ -247,8 +248,9 @@ function refreshMeta(value, meta, levels) {
         });
         meta.children = (t === 'array') ? vals : object(ks, vals);
         if (meta.autoSize) {
-            var x = vals.reduce((x, m) => Math.min(x, m.x - spacing), Infinity);
-            var y = vals.reduce((y, m) => Math.min(y, m.y - spacing), Infinity);
+            var min = (a, b) => Math.min(a, b);
+            var x = vals.map((m, i) => m.x - spacing - tw[i]).reduce(min, Infinity);
+            var y = vals.map((m, i) => m.y - spacing - 00000).reduce(min, Infinity);
             if (x !== Infinity) { vals.map(m => m.x -= x); meta.x += x; }
             if (y !== Infinity) { vals.map(m => m.y -= y); meta.y += y; }
             meta.w = vals.reduce((w, m) => Math.max(w, m.x + m.w + spacing), spacing);
@@ -313,7 +315,7 @@ function getContent(value, meta, hoverPath, selectPath) {
                     return getContent(value[k], m,
                             (hoverPath && hoverPath[0] === k) ? hoverPath.slice(1) : false,
                             (selectPath && selectPath[0] === k) ? selectPath.slice(1) : false
-                        ).concat(a ? [] : [['#AA8844 text', k+' : ', meta.x + spacing + 0, m.y]])
+                        ).concat(a ? [] : [['#AA8844 text', k+' : ', m.x - spacing - ui.textWidth(k+':') + 0, m.y]])
                 }))) :
         (s) ? stringOf(value).split('\n').map((s, i) => ['text', s, meta.x, meta.y + (textSize * i)])
             : [['text', stringOf(value), meta.x, meta.y]]
