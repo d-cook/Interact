@@ -160,20 +160,8 @@ var selectedItem = [];
 // UI Renderer
 var ui = Renderer('top left', { size: textSize, baseline: 'top' });
 
-var rootFunc = {
-    parent : null,
-    args   : [],
-    actions: [
-        _id, lookupValue, lookupContext, lookup, evalCall, evalAction, apply,
-        has, get, set, del, type, _if, and, or, array, object, keys, length, truthy, not,
-        plus, minus, mult, div, mod, EQ, NE, LT, GT, LTE, GTE,
-        slice, push, unshift, pop, shift, charAt, substring
-        //rootFunc is inserted HERE
-        //innerFunc is inserted HERE
-    ]
-};
 var innerFunc = {
-    parent : null, //root.context inserted HERE
+    parent : null, // rootContext will be inserted HERE
     args   : ['param1', 'param2'],
     actions: [
         123,
@@ -188,15 +176,19 @@ var innerFunc = {
         [[1]]
     ]
 };
+var rootFunc = { parent : null, args: [] };
+rootFunc.actions = [
+    _id, lookupValue, lookupContext, lookup, evalCall, evalAction, apply,
+    has, get, set, del, type, _if, and, or, array, object, keys, length, truthy, not,
+    plus, minus, mult, div, mod, EQ, NE, LT, GT, LTE, GTE,
+    slice, push, unshift, pop, shift, charAt, substring,
+    rootFunc, innerFunc
+];
 
-rootFunc.actions.push(rootFunc);
-rootFunc.actions.push(innerFunc);
-
-// Root view
-var root = createView(rootFunc, []);
+// Root context
+var rootContext = innerFunc.parent = applyContext(rootFunc, []);
 
 // Active view
-innerFunc.parent = root.context;
 var view = createView(innerFunc, ['arg1', 'arg2']);
 
 function createView(func, args) {
@@ -495,7 +487,7 @@ ui.fitToWindow(function onResize(w, h) {
     }
 
     function test(actions, args, expected) {
-        let result = apply({ parent:root.context, actions }, args);
+        let result = apply({ parent:rootContext, actions }, args);
         let unQ = s => str(s).replace(/^\"|\"$/g, '')
         if (!eq(unQ(result), unQ(expected))) {
             console.error('TEST FAILED:' +
@@ -524,5 +516,5 @@ ui.fitToWindow(function onResize(w, h) {
     test([[5],[x=>x, [0]]         ], [1,2,"foo", {x:5      }], '[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,...');
     test([[5],[x=>x, [0,1]]       ], [1,2,"foo", {x:5      }], 5);
     test([[5],[x=>x, [0,"values"]]], [1,2,"foo", {x:5      }], '[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,...');
-    test([[5],[x=>x, [0,"parent"]]], [1,2,"foo", {x:5      }], root.context);
+    test([[5],[x=>x, [0,"parent"]]], [1,2,"foo", {x:5      }], rootContext);
 }());
