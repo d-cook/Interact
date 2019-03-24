@@ -468,32 +468,60 @@ ui.fitToWindow(function onResize(w, h) {
 // ---- TESTS ----
 // ---------------
 
-function test(context, args) { console.log(apply(context, args)); }
+(function runTests() {
+    function str(x, d) {
+        let t = type(x);
+        let s = (
+           (d >= 10         ) ? '...' :
+           (t === 'array'   ) ? '[' + x.map(v => str(v, (d||0)+1)).join(',') + ']' :
+           (t === 'object'  ) ? '{' + keys(x).map(k => k + ':' + str(x[k], (d||0)+1)).join(',') + '}' :
+           (t === 'function') ? String(x).replace(/(\n|\s)+/g, ' ') :
+           (t === 'string'  ) ? '"' + x + '"'
+                              : String(x)
+        ).replace(/\n/, '');
+        return (s.length > 150) ? s.substring(0, 147) + '...' : s;
+    }
 
-console.log("----------------");
-console.log("Running tests...");
-console.log("----------------");
+    function eq(a, b) {
+        let ta = type(a), tb = type(b);
+        return (a === b) || (
+            (ta === tb) && (
+                (ta === 'array' ) ? a.reduce((e, v, i) => e && eq(v, b[i]), true) :
+                (ta === 'object') ? keys(a).concat(keys(b)).reduce((e, k) => e && eq(a[k], b[k]), true)
+                                  : str(a) === str(b)
+            )
+       );
+    }
 
-test({parent:root.context, actions:[]}, [1,2,"foo",{x:5}]);
-test({parent:root.context, actions:[5]}, [1,2,"foo",{x:5}]);
-test({parent:root.context, actions:["test"]}, [1,2,"foo",{x:5}]);
-test({parent:root.context, actions:[0,1,2,3]}, [1,2,"foo",{x:5}]);
-test({parent:root.context, actions:[[[1,16],1,2,3]]}, [1,2,"foo",{x:5}]);
-test({parent:root.context, actions:[[[1,0]]]}, [1,2,"foo",{x:5}]);
-test({parent:root.context, actions:[[[1,22]]]}, [1,2,"foo",{x:5}]);
-test({parent:root.context, actions:[[[1,22],[-1,0],[-1,1]]]}, [1,2,"foo",{x:5}]);
-test({parent:root.context, actions:[[[1,22],[0,0,0],[-1,1]]]}, [1,2,"foo",{x:5}]);
-test({parent:root.context, actions:[[[1,22],[-1,1],[-1,2]]]}, [1,2,"foo",{x:5}]);
-test({parent:root.context, actions:[[[1,9]]]}, [1,2,"foo",{x:5}]);
-test({parent:root.context, actions:[[[1,9],[-1,3],[-1,2]]]}, [1,2,"foo",{foo:5}]);
-test({parent:root.context, actions:[[[1,9],[-1,3],[-1,2]]]}, [1,2,"foo",{foo:5,x:7}]);
-test({parent:root.context, actions:[[[1,9],[-1,3],[-1,2]]]}, [1,2,"x",{foo:5,x:7}]);
-test({parent:root.context, actions:[[[1,9],[-1,3],[-1,2]]]}, [1,2,"xx",{foo:5,x:7}]);
-test({parent:root.context, actions:[[5],[x=>x, [0]]]}, [1,2,"foo",{x:5}]);
-test({parent:root.context, actions:[[5],[x=>x, [0,1]]]}, [1,2,"foo",{x:5}]);
-test({parent:root.context, actions:[[5],[x=>x, [0,"values"]]]}, [1,2,"foo",{x:5}]);
-test({parent:root.context, actions:[[5],[x=>x, [0,"parent"]]]}, [1,2,"foo",{x:5}]);
+    function test(actions, args, expected) {
+        let result = apply({ parent:root.context, actions }, args);
+        let unQ = s => str(s).replace(/^\"|\"$/g, '')
+        if (!eq(unQ(result), unQ(expected))) {
+            console.error('TEST FAILED:' +
+                         '\n  actions : ' + str(actions ) +
+                         '\n  args    : ' + str(args    ) +
+                         '\n  expected: ' + str(expected) +
+                         '\n  result  : ' + str(result  ));
+        }
+    }
 
-console.log("------------");
-console.log("End of tests");
-console.log("------------");
+    test([                        ], [1,2,"foo", {x:5      }], null);
+    test([5                       ], [1,2,"foo", {x:5      }], 5);
+    test(["test"                  ], [1,2,"foo", {x:5      }], 'test');
+    test([0,1,2,3                 ], [1,2,"foo", {x:5      }], 3);
+    test([[[1,16],1,2,3]          ], [1,2,"foo", {x:5      }], [1,2,3]);
+    test([[[1,0]]                 ], [1,2,"foo", {x:5      }], []);
+    test([[[1,22]]                ], [1,2,"foo", {x:5      }], plus);
+    test([[[1,22],[-1,0],[-1,1]]  ], [1,2,"foo", {x:5      }], 3);
+    test([[[1,22],[0,0,0],[-1,1]] ], [1,2,"foo", {x:5      }], 3);
+    test([[[1,22],[-1,1],[-1,2]]  ], [1,2,"foo", {x:5      }], '2foo');
+    test([[[1,9]]                 ], [1,2,"foo", {x:5      }], get);
+    test([[[1,9],[-1,3],[-1,2]]   ], [1,2,"foo", {foo:5    }], 5);
+    test([[[1,9],[-1,3],[-1,2]]   ], [1,2,"foo", {foo:5,x:7}], 5);
+    test([[[1,9],[-1,3],[-1,2]]   ], [1,2,"x"  , {foo:5,x:7}], 7);
+    test([[[1,9],[-1,3],[-1,2]]   ], [1,2,"xx" , {foo:5,x:7}], null);
+    test([[5],[x=>x, [0]]         ], [1,2,"foo", {x:5      }], '[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,...');
+    test([[5],[x=>x, [0,1]]       ], [1,2,"foo", {x:5      }], 5);
+    test([[5],[x=>x, [0,"values"]]], [1,2,"foo", {x:5      }], '[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,...');
+    test([[5],[x=>x, [0,"parent"]]], [1,2,"foo", {x:5      }], root.context);
+}());
