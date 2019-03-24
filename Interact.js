@@ -280,6 +280,7 @@ function stringOf(value) {
            (t !== 'function') ? String(value)
                               : String(value).replace(/^(function\s*(\w+)?\s*)?\(?([^\)]*)\)?\s*(\=\>|\{)(.|\s)*$/, "$2($3)")
                                              .replace(/\s/g, '')
+                                             .replace(/\.\.\./g, '..')
                                              .replace(/^\(/, '[func](');
 }
 
