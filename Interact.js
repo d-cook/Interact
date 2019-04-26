@@ -470,6 +470,8 @@ ui.fitToWindow(function onResize(w, h) {
 // ---------------
 
 (function runTests() {
+    let errs = [];
+
     function str(x, d) {
         let t = type(x);
         let s = (
@@ -498,7 +500,7 @@ ui.fitToWindow(function onResize(w, h) {
         let result = apply({ parent:rootContext, actions }, args);
         let unQ = s => str(s).replace(/^\"|\"$/g, '')
         if (!eq(unQ(result), unQ(expected))) {
-            console.error('TEST FAILED:' +
+            errs.push('TEST FAILED:' +
                          '\n  actions : ' + str(actions ) +
                          '\n  args    : ' + str(args    ) +
                          '\n  expected: ' + str(expected) +
@@ -525,4 +527,18 @@ ui.fitToWindow(function onResize(w, h) {
     test(['!',[x=>x, [0,1]]       ], [1,2,"foo", {x:5      }], '!');
     test([[5],[x=>x, [0,"values"]]], [1,2,"foo", {x:5      }], '[[1,2,"foo",{x:5}],null,[[1,2,"foo",{x:5}],null,[[1,2,"foo",{x:5}],null,[[1,2,"foo",{x:5}],null,[[1,2,"foo",{x:5}],null,[[1,2,"foo",{x:5}],null,[[1...');
     test([[5],[x=>x, [0,"parent"]]], [1,2,"foo", {x:5      }], rootContext);
+
+    if (errs.length > 0) {
+        function desc(o) {
+            let t = type(o);
+            return (t === 'object'  ) ? '{..}' :
+                   (t === 'array'   ) ? '[..]' :
+                   (t !== 'function') ? o
+                                      : String(o).replace(/\n|\r/g, '')
+                                                 .replace(/^\s*function\s*/, '')
+                                                 .replace(/\s*\(.*$/g, '');
+        }
+        console.warn(rootFunc.actions.reduce((m, a, i) => m + '\n ' + (i < 9 ? ' ' : '') + (i+1) + ': ' + desc(a), 'Actions:'));
+        errs.map(e => console.error(e));
+    }
 }());
