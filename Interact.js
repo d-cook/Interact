@@ -119,8 +119,7 @@ function lookup(context, path) {
 
 function evalCall(context, entries) {
     var lookups = entries.map(e => lookup(context, e));
-    return (lookups.length > 1) ? apply(lookups[0], lookups.slice(1)) :
-           (lookups.length > 0) ? lookups[0]
+    return (lookups.length > 0) ? apply(lookups[0], lookups.slice(1))
                                 : null;
 }
 
@@ -512,18 +511,18 @@ ui.fitToWindow(function onResize(w, h) {
     test(["test"                  ], [1,2,"foo", {x:5      }], 'test');
     test([0,1,2,3                 ], [1,2,"foo", {x:5      }], 3);
     test([[[1,16],1,2,3]          ], [1,2,"foo", {x:5      }], [1,2,3]);
-    test([[[1,0]]                 ], [1,2,"foo", {x:5      }], []);
-    test([[[1,22]]                ], [1,2,"foo", {x:5      }], plus);
+    test([[[1,1],[1,0]]           ], [1,2,"foo", {x:5      }], []);
+    test([[[1,1],[1,22]]          ], [1,2,"foo", {x:5      }], plus);
     test([[[1,22],[-1,0],[-1,1]]  ], [1,2,"foo", {x:5      }], 3);
     test([[[1,22],[0,0,0],[-1,1]] ], [1,2,"foo", {x:5      }], 3);
     test([[[1,22],[-1,1],[-1,2]]  ], [1,2,"foo", {x:5      }], '2foo');
-    test([[[1,9]]                 ], [1,2,"foo", {x:5      }], get);
+    test([[[1,1],[1,9]]           ], [1,2,"foo", {x:5      }], get);
     test([[[1,9],[-1,3],[-1,2]]   ], [1,2,"foo", {foo:5    }], 5);
     test([[[1,9],[-1,3],[-1,2]]   ], [1,2,"foo", {foo:5,x:7}], 5);
     test([[[1,9],[-1,3],[-1,2]]   ], [1,2,"x"  , {foo:5,x:7}], 7);
     test([[[1,9],[-1,3],[-1,2]]   ], [1,2,"xx" , {foo:5,x:7}], null);
-    test([[5],[x=>x, [0]]         ], [1,2,"foo", {x:5      }], '[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,...');
-    test([[5],[x=>x, [0,1]]       ], [1,2,"foo", {x:5      }], 5);
-    test([[5],[x=>x, [0,"values"]]], [1,2,"foo", {x:5      }], '[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,[[1,2,"foo",{x:5}],5,...');
+    test([[5],[x=>x, [0]]         ], [1,2,"foo", {x:5      }], '[[1,2,"foo",{x:5}],null,[[1,2,"foo",{x:5}],null,[[1,2,"foo",{x:5}],null,[[1,2,"foo",{x:5}],null,[[1,2,"foo",{x:5}],null,[[1,2,"foo",{x:5}],null,[[1...');
+    test(['!',[x=>x, [0,1]]       ], [1,2,"foo", {x:5      }], '!');
+    test([[5],[x=>x, [0,"values"]]], [1,2,"foo", {x:5      }], '[[1,2,"foo",{x:5}],null,[[1,2,"foo",{x:5}],null,[[1,2,"foo",{x:5}],null,[[1,2,"foo",{x:5}],null,[[1,2,"foo",{x:5}],null,[[1,2,"foo",{x:5}],null,[[1...');
     test([[5],[x=>x, [0,"parent"]]], [1,2,"foo", {x:5      }], rootContext);
 }());
