@@ -138,10 +138,19 @@ function applyContext(func, args) {
     var context = { values:[args], parent:func.parent };
     var vals = context.values;
     var tf = type(func);
-    if (tf === 'function') { vals.push(func.apply(null, args)); }
+    if (tf === 'function') { vals.push(safeResult(func, args)); }
     else if (tf !== 'object') { vals.push(null); }
-    else { func.actions.map(a => vals.push(evalAction(context, a))); }
+    else { func.actions.map(a => vals.push(safeResult(evalAction(context, a)))); }
     return context;
+}
+
+function safeResult(f, args) {
+    try {
+        let r = (args) ? f(...args) : f;
+        return (type(r) === 'null') ? null : r;
+    } catch (ex) {
+        return safeResult((ex && ex.message) || ex);
+    }
 }
 
 // -----------------------------
