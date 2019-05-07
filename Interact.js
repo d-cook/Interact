@@ -67,12 +67,21 @@ function minus(x, ...rest) { return reduce(rest, (r,v) => r - v, x); }
 function mult (x, ...rest) { return reduce(rest, (r,v) => r * v, x); }
 function div  (x, ...rest) { return reduce(rest, (r,v) => r / v, x); }
 function mod  (x, ...rest) { return reduce(rest, (r,v) => r % v, x); }
-function EQ   (x, ...rest) { return reduce(rest, (r,v) => r && (v === x), true); }
-function NE   (x, ...rest) { return reduce(rest, (r,v) => r && (v !== x), true); }
+function is   (x, ...rest) { return reduce(rest, (r,v) => r && (v === x), true); }
+function isnt (x, ...rest) { return reduce(rest, (r,v) => r && (v !== x), true); }
 function LT   (x, ...rest) { return reduce(rest, (r,v) => r && (v <   x), true); }
 function GT   (x, ...rest) { return reduce(rest, (r,v) => r && (v >   x), true); }
 function LTE  (x, ...rest) { return reduce(rest, (r,v) => r && (v <=  x), true); }
 function GTE  (x, ...rest) { return reduce(rest, (r,v) => r && (v >=  x), true); }
+function NE   (x, ...rest) { return !EQ(x, ...rest); }
+function EQ   (x, ...rest) {
+    var t = type(x);
+    return reduce(rest, (r,v) => type(v) === t && (
+            (t === 'array' ) ? x.length === v.length && reduce(x, (e,xi,i) => e && EQ(xi, v[i]), true) :
+            (t === 'object') ? reduce(keys(x).concat(keys(v)), (e,k) => e && EQ(x[k], v[k]), true)
+                             : (t === 'null' || v === x)
+        ), true);
+}
 
 function array (...args) { return args; }
 function object(keys, values) {
@@ -190,7 +199,8 @@ rootFunc.actions = [
     has, get, set, del, type, _if, and, or, array, object, keys, length, truthy, not,
     plus, minus, mult, div, mod, EQ, NE, LT, GT, LTE, GTE,
     slice, push, unshift, pop, shift, charAt, substring,
-    rootFunc, innerFunc
+    rootFunc, innerFunc,
+    is, isnt // Adding changes to the end (too much work to redo it now!)
 ];
 
 // Root context
@@ -343,19 +353,8 @@ function bringToFront(metas, path) {
     }
 }
 
-function arrayMatch(a1, a2) {
-    var t1 = type(a1);
-    var t2 = type(a2);
-    return (t1 !== 'array' || t2 !== 'array')
-        ? (a1 === a2)
-        : (a1.length === a2.length) && a1.reduce(
-            (m, v, i) => m && arrayMatch(v, a2[i]),
-            true
-        );
-}
-
 function getActionIndex(action) {
-    return view.func.actions.reduce((idx, a, i) => (idx < 1 && arrayMatch(a, action)) ? i : idx, -1);
+    return view.func.actions.reduce((idx, a, i) => (idx < 1 && EQ(a, action)) ? i : idx, -1);
 }
 
 function addAction(action, meta) {
