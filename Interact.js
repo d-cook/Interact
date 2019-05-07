@@ -1,4 +1,4 @@
-// Paste "Renderer 1.1.1" code HERE ( https://github.com/d-cook/Render/releases/tag/1.1.1 )
+// Paste "Renderer 1.2.0" code HERE ( https://github.com/d-cook/Render/releases/tag/1.2.0 )
 
 // ----------------------
 // ---- Console Info ----
@@ -165,18 +165,6 @@ function safeResult(f, args) {
 // ---- TOOL IMPLEMENTATION ----
 // -----------------------------
 
-// Settings
-var textSize = 14; // text height
-var spacing = 12;  // spacing between components
-var rowSize = textSize + spacing;
-
-// Path to hovered/selected items
-var hoveredItem = [];
-var selectedItem = [];
-
-// UI Renderer
-var ui = Renderer('top left', { size: textSize, baseline: 'top' });
-
 var innerFunc = {
     parent : null, // rootContext will be inserted HERE
     args   : ['param1', 'param2'],
@@ -206,84 +194,6 @@ rootFunc.actions = [
 // Root context
 var rootContext = innerFunc.parent = applyContext(rootFunc, []);
 
-// Active view
-var view = createView(innerFunc, ['arg1', 'arg2']);
-
-function createView(func, args) {
-    var context = applyContext(func, args);
-    if (!func.meta) {
-        var meta = refreshMeta(context.values, null, 2);
-        func.meta = Object.assign(meta, { x: 0, y: 0, autoSize: false });
-    }
-    return {
-        func   : func,
-        context: context,
-        args   : args
-    };
-}
-
-function refreshMeta(value, meta, levels) {
-    if (type(levels) !== 'number') { levels = 1; }
-    var t = type(value);
-    meta = Object.assign({ x: 0, y: 0, z: 0, autoSize: true }, meta || {});
-    if (t !== 'object' && t !== 'array') {
-        var str = stringOf(value);
-        meta.w = (t === 'string')
-           ? str.split('\n').reduce((m, s) => Math.max(m, ui.textWidth(s)), 0)
-           : ui.textWidth(str);
-        meta.h = (t === 'string')
-           ? textSize * str.split('\n').length
-           : textSize;
-    } else if (meta.state === 'collapsed' || (!meta.state && levels < 1)) {
-        meta.w = 16;
-        meta.h = textSize;
-        meta.state = 'collapsed';
-    } else {
-        var ch = meta.children || [];
-        var h = values(ch).reduce((h, m) => Math.max(h, m.y + m.h + spacing), spacing);
-        var ks = keys(value);
-        var tw = ks.map(t === 'array' ? k => 0 : k => ui.textWidth(k+' : '));
-        var vals = ks.map((k, i) => {
-            var m = refreshMeta(
-                value[k],
-                ch[k] || {
-                    x: spacing + tw[i],
-                    y: h,
-                    z: i
-                },
-                (levels - 1)
-            );
-            if (!ch[k]) { h = m.y + m.h + spacing; }
-            return m;
-        });
-        meta.children = (t === 'array') ? vals : object(ks, vals);
-        if (meta.autoSize) {
-            var min = (a, b) => Math.min(a, b);
-            var x = vals.map((m, i) => m.x - spacing - tw[i]).reduce(min, Infinity);
-            var y = vals.map((m, i) => m.y - spacing - 00000).reduce(min, Infinity);
-            if (x !== Infinity) { vals.map(m => m.x -= x); meta.x += x; }
-            if (y !== Infinity) { vals.map(m => m.y -= y); meta.y += y; }
-            meta.w = vals.reduce((w, m) => Math.max(w, m.x + m.w + spacing), spacing);
-            meta.h = vals.reduce((h, m) => Math.max(h, m.y + m.h + spacing), spacing);
-        }
-        meta.state = 'expanded';
-    }
-    return meta;
-}
-
-function subMeta(meta, key) {
-    var m = (meta.children && meta.children[key]);
-    m = (m) ? Object.assign({}, m) : refreshMeta(null);
-    m.x += meta.x;
-    m.y += meta.y;
-    return m;
-}
-
-function metasByZ(metas) {
-    return keys(metas).map(k => ({ k:k, m:metas[k]}))
-                      .sort((a, b) => a.m.z - b.m.z);
-}
-
 function stringOf(value) {
     var t = type(value);
     return (t === 'string'  ) ? '"' + value.replace(/\t/g, '    ').replace(/\r?\n/g, '\n ') + '"' :
@@ -294,166 +204,263 @@ function stringOf(value) {
                                              .replace(/^\(/, '[func](');
 }
 
-function getContent(value, meta, hoverPath, selectPath) {
-    var t = type(value);
-    var a = (t === 'array');
-    var o = (t === 'object');
-    var s = (t === 'string');
-    var c = (meta.state === 'collapsed');
-    var hovered = (hoverPath && hoverPath.length === 0);
-    var selected = (selectPath && selectPath.length === 0);
-    return (
-        (hovered || selected)
-            ? [[(selected ? 'cyan' : '#FFEE44')+' filled rect', meta.x - 2, meta.y - 2, meta.w + 4, meta.h + 4]]
-            : []
-    )
-    .concat([['white filled rect', meta.x, meta.y, meta.w, meta.h]])
-    .concat(
-     (c&&a) ? [['filled #EEEEEE rect', meta.x, meta.y, 16, textSize],
-               ['black rect',          meta.x, meta.y, 16, textSize],
-               ['filled #666666 rect', meta.x + 3, meta.y + meta.h - 6, 2, 2],
-               ['filled #666666 rect', meta.x + 7, meta.y + meta.h - 6, 2, 2],
-               ['filled #666666 rect', meta.x +11, meta.y + meta.h - 6, 2, 2]
-              ] :
-     (c&&o) ? [['filled #EEEEEE rect', meta.x, meta.y, 16, textSize],
-               ['black rect',          meta.x, meta.y, 16, textSize],
-               ['filled #666666 rect', meta.x + 4, meta.y + meta.h - 6, 2, 2],
-               ['filled #666666 rect', meta.x + 4, meta.y + meta.h -10, 2, 2]
-              ] :
-     (a||o) ? [['rect', meta.x, meta.y, meta.w, meta.h]]
-                .concat([].concat.apply([], metasByZ(meta.children).reverse().map(km => {
-                    var k = km.k, m = subMeta(meta, k);
-                    return getContent(value[k], m,
-                            (hoverPath && hoverPath[0] === k) ? hoverPath.slice(1) : false,
-                            (selectPath && selectPath[0] === k) ? selectPath.slice(1) : false
-                        ).concat(a ? [] : [['#AA8844 text', k+' : ', m.x - spacing - ui.textWidth(k+':') + 0, m.y]])
-                }))) :
-        (s) ? stringOf(value).split('\n').map((s, i) => ['text', s, meta.x, meta.y + (textSize * i)])
-            : [['text', stringOf(value), meta.x, meta.y]]
-    );
-}
+// Settings
+var textSize = 14; // text height
+var spacing = 12;  // spacing between components
 
-function refreshView() {
-    view = createView(view.func, view.args);
-    var w = view.func.meta.w; // Keep width set by window
-    var h = view.func.meta.h; // Keep height set by window
-    var meta = refreshMeta(view.context.values, view.func.meta);
-    view.func.meta = Object.assign(meta, { w: w, h: h });
-}
+function funcView(func, args) {
+    // Path to hovered/selected items
+    var hoveredItem = [];
+    var selectedItem = [];
 
-function renderContent() {
-    ui.render(getContent(view.context.values, view.func.meta, hoveredItem, selectedItem));
-}
+    var context = applyContext(func, args);
 
-function bringToFront(metas, path) {
-    if (metas && metas.length > 0 && path.length > 0) {
-        metas[path[0]].z = -1;
-        metasByZ(metas).map((km, i) => km.m.z = i);
-        bringToFront(metas.children, path.slice(1));
+    if (!func.meta) {
+        var meta = refreshMeta(context.values, null, 2);
+        func.meta = Object.assign(meta, { x: 0, y: 0, autoSize: false });
     }
-}
 
-function getActionIndex(action) {
-    return view.func.actions.reduce((idx, a, i) => (idx < 1 && EQ(a, action)) ? i : idx, -1);
-}
+    var view = {
+        func, context, args,
+        selectHoveredItem,
+        setHoveredItems,
+        moveSelectedItem,
+        extractSelectedItem,
+        expandSelectedItem,
+        getContent: () => getContent(view.context.values, view.func.meta, hoveredItem, selectedItem)
+    };
 
-function addAction(action, meta) {
-    view.func.actions.push(action);
-    view.func.meta.children.push(meta || null);
-}
+    function refreshMeta(value, meta, levels) {
+        if (type(levels) !== 'number') { levels = 1; }
+        var t = type(value);
+        meta = Object.assign({ x: 0, y: 0, z: 0, autoSize: true }, meta || {});
+        if (t !== 'object' && t !== 'array') {
+            var str = stringOf(value);
+            meta.w = (t === 'string')
+               ? str.split('\n').reduce((m, s) => Math.max(m, ui.textWidth(s)), 0)
+               : ui.textWidth(str);
+            meta.h = (t === 'string')
+               ? textSize * str.split('\n').length
+               : textSize;
+        } else if (meta.state === 'collapsed' || (!meta.state && levels < 1)) {
+            meta.w = 16;
+            meta.h = textSize;
+            meta.state = 'collapsed';
+        } else {
+            var ch = meta.children || [];
+            var h = values(ch).reduce((h, m) => Math.max(h, m.y + m.h + spacing), spacing);
+            var ks = keys(value);
+            var tw = ks.map(t === 'array' ? k => 0 : k => ui.textWidth(k+' : '));
+            var vals = ks.map((k, i) => {
+                var m = refreshMeta(
+                    value[k],
+                    ch[k] || {
+                        x: spacing + tw[i],
+                        y: h,
+                        z: i
+                    },
+                    (levels - 1)
+                );
+                if (!ch[k]) { h = m.y + m.h + spacing; }
+                return m;
+            });
+            meta.children = (t === 'array') ? vals : object(ks, vals);
+            if (meta.autoSize) {
+                var min = (a, b) => Math.min(a, b);
+                var x = vals.map((m, i) => m.x - spacing - tw[i]).reduce(min, Infinity);
+                var y = vals.map((m, i) => m.y - spacing - 00000).reduce(min, Infinity);
+                if (x !== Infinity) { vals.map(m => m.x -= x); meta.x += x; }
+                if (y !== Infinity) { vals.map(m => m.y -= y); meta.y += y; }
+                meta.w = vals.reduce((w, m) => Math.max(w, m.x + m.w + spacing), spacing);
+                meta.h = vals.reduce((h, m) => Math.max(h, m.y + m.h + spacing), spacing);
+            }
+            meta.state = 'expanded';
+        }
+        return meta;
+    }
 
-function isOver(meta, x, y) {
-    return (x >= meta.x && x <= meta.x + meta.w && y >= meta.y && y <= meta.y + meta.h);
-}
+    function subMeta(meta, key) {
+        var m = (meta.children && meta.children[key]);
+        m = (m) ? Object.assign({}, m) : refreshMeta(null);
+        m.x += meta.x;
+        m.y += meta.y;
+        return m;
+    }
 
-function getKeyAt(metas, x, y) {
-    return metasByZ(metas).reduce((i, km) => (i === null && isOver(km.m, x, y)) ? km.k : i, null);
-}
+    function metasByZ(metas) {
+        return keys(metas).map(k => ({ k:k, m:metas[k]}))
+                          .sort((a, b) => a.m.z - b.m.z);
+    }
 
-function getItemAt(metas, x, y) {
-    var k = getKeyAt(metas, x, y);
-    var m = metas[k];
-    return (k === null) ? [] :
-           (m.children) ? [k, ...getItemAt(m.children, x - m.x, y - m.y)]
-                        : [k];
-}
+    function getContent(value, meta, hoverPath, selectPath) {
+        var t = type(value);
+        var a = (t === 'array');
+        var o = (t === 'object');
+        var s = (t === 'string');
+        var c = (meta.state === 'collapsed');
+        var hovered = (hoverPath && hoverPath.length === 0);
+        var selected = (selectPath && selectPath.length === 0);
+        return (
+            (hovered || selected)
+                ? [[(selected ? 'cyan' : '#FFEE44')+' filled rect', meta.x - 2, meta.y - 2, meta.w + 4, meta.h + 4]]
+                : []
+        )
+        .concat([['white filled rect', meta.x, meta.y, meta.w, meta.h]])
+        .concat(
+         (c&&a) ? [['filled #EEEEEE rect', meta.x, meta.y, 16, textSize],
+                   ['black rect',          meta.x, meta.y, 16, textSize],
+                   ['filled #666666 rect', meta.x + 3, meta.y + meta.h - 6, 2, 2],
+                   ['filled #666666 rect', meta.x + 7, meta.y + meta.h - 6, 2, 2],
+                   ['filled #666666 rect', meta.x +11, meta.y + meta.h - 6, 2, 2]
+                  ] :
+         (c&&o) ? [['filled #EEEEEE rect', meta.x, meta.y, 16, textSize],
+                   ['black rect',          meta.x, meta.y, 16, textSize],
+                   ['filled #666666 rect', meta.x + 4, meta.y + meta.h - 6, 2, 2],
+                   ['filled #666666 rect', meta.x + 4, meta.y + meta.h -10, 2, 2]
+                  ] :
+         (a||o) ? [['rect', meta.x, meta.y, meta.w, meta.h]]
+                    .concat([].concat.apply([], metasByZ(meta.children).reverse().map(km => {
+                        var k = km.k, m = subMeta(meta, k);
+                        return getContent(value[k], m,
+                                (hoverPath && hoverPath[0] === k) ? hoverPath.slice(1) : false,
+                                (selectPath && selectPath[0] === k) ? selectPath.slice(1) : false
+                            ).concat(a ? [] : [['#AA8844 text', k+' : ', m.x - spacing - ui.textWidth(k+':') + 0, m.y]])
+                    }))) :
+            (s) ? stringOf(value).split('\n').map((s, i) => ['text', s, meta.x, meta.y + (textSize * i)])
+                : [['text', stringOf(value), meta.x, meta.y]]
+        );
+    }
 
-// -- UI interactions --
+    function refreshView() {
+        view = funcView(view.func, view.args);
+        var w = view.func.meta.w; // Keep width set by window
+        var h = view.func.meta.h; // Keep height set by window
+        var meta = refreshMeta(view.context.values, view.func.meta);
+        view.func.meta = Object.assign(meta, { w: w, h: h });
+    }
 
-function selectHoveredItem() {
-    selectedItem = hoveredItem;
-    bringToFront(view.func.meta.children, selectedItem);
-}
+    function bringToFront(metas, path) {
+        if (metas && metas.length > 0 && path.length > 0) {
+            metas[path[0]].z = -1;
+            metasByZ(metas).map((km, i) => km.m.z = i);
+            bringToFront(metas.children, path.slice(1));
+        }
+    }
 
-function extractSelectedItem() {
-    if (selectedItem.length > 1) {
-        var last = selectedItem.length - 1;
-        var action = [[1, 9], [0, ...selectedItem.slice(0, last)], selectedItem[last]];
-        var idx = getActionIndex(action) + 1;
-        if (idx < 1) {
-            idx = view.func.actions.length + 1;
-            var item = selectedItem.reduce((v, s) => v[s], view.context.values);
-            var outerMeta = view.func.meta.children[selectedItem[0]];
-            var innerMeta = selectedItem.reduce((m, s) => subMeta(m, s), view.func.meta);
-            addAction(action, refreshMeta(item, { x: outerMeta.x + outerMeta.w + spacing, y: innerMeta.y }));
+    function getActionIndex(action) {
+        return view.func.actions.reduce((idx, a, i) => (idx < 1 && EQ(a, action)) ? i : idx, -1);
+    }
+
+    function addAction(action, meta) {
+        view.func.actions.push(action);
+        view.func.meta.children.push(meta || null);
+    }
+
+    function isOver(meta, x, y) {
+        return (x >= meta.x && x <= meta.x + meta.w && y >= meta.y && y <= meta.y + meta.h);
+    }
+
+    function getKeyAt(metas, x, y) {
+        return metasByZ(metas).reduce((i, km) => (i === null && isOver(km.m, x, y)) ? km.k : i, null);
+    }
+
+    function getItemAt(metas, x, y) {
+        var k = getKeyAt(metas, x, y);
+        var m = metas[k];
+        return (k === null) ? [] :
+               (m.children) ? [k, ...getItemAt(m.children, x - m.x, y - m.y)]
+                            : [k];
+    }
+
+    // -- UI interactions --
+
+    function selectHoveredItem() {
+        selectedItem = hoveredItem;
+        bringToFront(view.func.meta.children, selectedItem);
+    }
+
+    function extractSelectedItem() {
+        if (selectedItem.length > 1) {
+            var last = selectedItem.length - 1;
+            var action = [[1, 9], [0, ...selectedItem.slice(0, last)], selectedItem[last]];
+            var idx = getActionIndex(action) + 1;
+            if (idx < 1) {
+                idx = view.func.actions.length + 1;
+                var item = selectedItem.reduce((v, s) => v[s], view.context.values);
+                var outerMeta = view.func.meta.children[selectedItem[0]];
+                var innerMeta = selectedItem.reduce((m, s) => subMeta(m, s), view.func.meta);
+                addAction(action, refreshMeta(item, { x: outerMeta.x + outerMeta.w + spacing, y: innerMeta.y }));
+                refreshView();
+            }
+            selectedItem = [idx];
+            bringToFront(view.func.meta.children, selectedItem);
+        }
+    }
+
+    function expandSelectedItem() {
+        if (selectedItem.length > 0) {
+            var meta = selectedItem.reduce((m, s) => m.children[s], view.func.meta);
+            if (meta.state === 'collapsed') {meta.state = 'expanded'; }
+            else if (meta.state === 'expanded') { meta.state = 'collapsed'; }
+            bringToFront(view.func.meta.children, selectedItem);
             refreshView();
         }
-        selectedItem = [idx];
-        bringToFront(view.func.meta.children, selectedItem);
     }
+
+    function moveSelectedItem(dx, dy) {
+        if (selectedItem.length > 0) {
+            var m = selectedItem.reduce((m, s) => m.children[s], view.func.meta);
+            m.x += dx;
+            m.y += dy;
+            refreshView();
+        }
+    }
+
+    function setHoveredItems(x, y) {
+        hoveredItem = getItemAt(view.func.meta.children, x, y);
+    }
+    
+    return view;
 }
 
-function expandSelectedItem() {
-    if (selectedItem.length > 1) {
-        var meta = selectedItem.reduce((m, s) => m.children[s], view.func.meta);
-        if (meta.state === 'collapsed') {meta.state = 'expanded'; }
-        else if (meta.state === 'expanded') { meta.state = 'collapsed'; }
-        bringToFront(view.func.meta.children, selectedItem);
-        refreshView();
-    }
-}
+// UI Renderer
+var ui = Renderer('top left', { size: textSize, baseline: 'top' });
 
-function moveSelectedItem(dx, dy) {
-    if (selectedItem.length > 0) {
-        var m = selectedItem.reduce((m, s) => m.children[s], view.func.meta);
-        m.x += dx;
-        m.y += dy;
-        refreshView();
-    }
-}
-
-function setHoveredItems(x, y) {
-    hoveredItem = getItemAt(view.func.meta.children, x, y);
-}
+// Active view
+var view = funcView(innerFunc, ['arg1', 'arg2']);
 
 // -- Initialize UI --
+
+function renderContent() {
+    ui.render(view.getContent());
+}
 
 ui.onMouseUp(function onMouseUp(x, y) {
     renderContent();
 });
 
 ui.onMouseDown(function onMouseDown(x, y) {
-    selectHoveredItem();
+    view.selectHoveredItem();
     renderContent();
 });
 
 ui.onMouseMove(function onMouseMove(x, y, prevX, prevY) {
-    setHoveredItems(x, y);
+    view.setHoveredItems(x, y);
     renderContent();
 });
 
 ui.onMouseDrag(function onMouseDrag(x, y, prevX, prevY) {
-    moveSelectedItem(x - prevX, y - prevY);
+    view.moveSelectedItem(x - prevX, y - prevY);
     renderContent();
 });
 
 ui.onMouseClick(function onMouseClick(x, y, clicks) {
     if (clicks > 1) {
         // Double-Click
-        extractSelectedItem();
+        view.extractSelectedItem();
     } else {
         // Single-Click
-        expandSelectedItem();
+        view.expandSelectedItem();
     }
     renderContent();
 }, 285);
